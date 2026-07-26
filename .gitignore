@@ -1,0 +1,65 @@
+# Derived from the EADOS factory template (.eados-core/templates/gitignore.tmpl) with three
+# project-specific deviations, each marked [EGL] below:
+#   1. `target/` is unanchored — a Maven reactor (ADR-001) has a target/ per module, so the
+#      template's root-anchored `/target/` would miss core/target, jdbc/target, and so on.
+#   2. JetBrains module files and compiled classes added (this repo is developed in IntelliJ).
+#   3. Gradle/Cargo/node entries retained from the template even though this build is Maven —
+#      they are harmless and keeping the template's shape makes future re-sync trivial.
+
+# Build outputs
+/build/
+/dist/
+/out/
+target/          # [EGL] unanchored: per-module output in the Maven reactor
+*.class          # [EGL] Java bytecode
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Dependency / package manager caches
+/node_modules/
+/.venv/
+/venv/
+__pycache__/
+*.pyc
+/.gradle/
+/vendor/
+/.cargo/
+
+# Coverage & test artifacts
+/coverage/
+*.gcda
+*.gcno
+*.profraw
+.coverage
+htmlcov/
+
+# IDE / editor
+/.idea/
+*.iml            # [EGL] JetBrains module files
+/.vscode/
+*.swp
+.DS_Store
+
+# Tool caches
+/.mypy_cache/
+/.ruff_cache/
+/.pytest_cache/
+
+# Generated docs
+/docs/_site/
+/docs/doxygen/html/
+
+# Local agent / harness scratch (never commit)
+.questions
+.bugs
+.claude/settings.local.json
+
+# EADOS factory tooling — the .eados-core/ bundle is copied in to (re)generate this repo; it is
+# not part of the project's own source.
+/.eados-core/
