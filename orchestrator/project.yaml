@@ -5,14 +5,21 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 0
+manifest_rev: 1              # bumped with the init -> design transition recorded below. The write was
+                             # guarded (#214): re-proposed with --expect-rev 0 immediately beforehand,
+                             # which confirmed no other session had moved the rev.
 domain: software             # development target (Q0.4) -> .eados-core/orchestrator/domains/software.yaml
 
 # delivery_state holds STATE + cross-link REFS (ids), never content (RFC-0001 §8).
 delivery_state:
-  phase: init                # init|design|plan|scaffold|audit|migrate
-  checkpoints: []            # transition ledger (#199) — written by phase_runner --propose
-  refs: { rfcs: [], milestones: [], prs: [], releases: [] }
+  phase: design              # init|design|plan|scaffold|audit|migrate — the acting role is now
+                             # tech-lead (owns docs/rfc/**, src/**), no longer enterprise-architect.
+  # Transition ledger (#199) — a legal, contiguous chain ending at `phase`. A human-gated move carries
+  # confirmed_by AND gate_results, so the record is evidence rather than honour (#250). Emitted verbatim
+  # by `phase_runner --propose design`; the owner's confirmation substitutes for the <owner> placeholder.
+  checkpoints:
+    - { from: init, to: design, gates: ['manifest-valid'], at: 2026-07-26, confirmed_by: danielPoloWork, gate_results: { manifest-valid: OK } }
+  refs: { rfcs: [], milestones: [], prs: [1], releases: [] }   # PR #1 = the bootstrap PR (traceability edge)
 
 identity:
   # Scope reconciled 2026-07-26: the maintainer confirmed `.spec/d4np-java.md` (reviewed draft
