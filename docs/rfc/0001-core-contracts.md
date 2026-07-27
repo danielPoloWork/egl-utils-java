@@ -1,6 +1,6 @@
 # RFC-0001: Core module contracts and error model
 
-- **Status:** In review
+- **Status:** Accepted (2026-07-27, owner authority — no peer-review round; see [Approval](#approval))
 - **Author:** tech-lead · **Reviewers:** reviewer, enterprise-architect (cross-cutting — this RFC sets
   the contract convention every later module inherits) · **Approver:** tech-lead
 - **Date:** 2026-07-27
@@ -335,15 +335,23 @@ the whole point of authoring it before Milestone 1 item 1.1 establishes the reac
 
 ## Approval
 
-Filled by the approver **after** review — the approval encodes a human decision and no RFC
-self-approves (`AGENTS.md` §6, `review-protocol.md`). The `rfc-approved` gate reads this record and
-**fails until the line below is completed by the owner**:
+The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6,
+`review-protocol.md`). The record below was **authorized by the owner (@danielPoloWork) in session on
+2026-07-27** and transcribed by the agent. The agent drafted this RFC and did not judge its
+soundness; the decision is the owner's.
 
 ```
-approved-by: <pending — the owner records the approval here; the agent must not pre-fill it>
+approved-by: tech-lead (2026-07-27)
 ```
 
-Reviewers (structured findings addressed): reviewer — ▢ ; enterprise-architect — ▢.
+**Review provenance — stated, not implied.** Procedure step 3 — independent `reviewer` and
+`enterprise-architect` findings — **did not run**. No structured findings were raised, so none were
+resolved. This approval therefore rests on the owner's direct authority (precedence layer 1, the
+terminal gate) rather than on a peer-review round. It is recorded here so the audit trail cannot be
+read as reviewed when it was not, and so a later reader knows which assurance this RFC does *and does
+not* carry.
+
+Reviewers (structured findings addressed): reviewer — **not run** ; enterprise-architect — **not run**.
 
 ## References
 
