@@ -23,7 +23,7 @@ JDK 17+; `core` carries zero third-party dependencies, so a team can take one pa
 taking a framework. Framework independence is a build property enforced in CI, not a slogan.
 
 The frozen specification is in
-[`docs/specs/01_spec_util.md`](docs/specs/01_spec_util.md).
+[`docs/specs/01_spec_utils.md`](docs/specs/01_spec_utils.md).
 
 ## Build, test, run
 
@@ -34,7 +34,7 @@ mvn -B test
 
 - **Toolchain:** Maven 3.9+ (multi-module reactor), JUnit 5 + AssertJ; jqwik (property tests); jcstress (concurrency); H2 (JDBC integration), Spotless (google-java-format), ErrorProne + NullAway + Checkstyle; maven-enforcer for the ADR-001 dependency rules.
 - **Supported platforms:** Linux / Windows / macOS on Temurin JDK 17 & 21.
-- Consumers import the public surface via: `import it.d4np.util.*;`.
+- Consumers import the public surface via: `import it.d4np.utils.*;`.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

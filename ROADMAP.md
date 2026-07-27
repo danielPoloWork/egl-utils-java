@@ -161,7 +161,7 @@ lands before the reactor exists (ADR-004).
 
 - [ ] 1.1 Maven reactor skeleton — parent POM, the nine modules of ADR-001, and the BOM; relocate the rendered tree to become the `core` module's source root, updating every generated `src_main`/`src_test`/`src_bench` reference **and** the `consistency_lint.py` path assertions in the same item (ADR-004). Blocks 1.2–1.9 and all of M2. — size: **L** · route: **frontier-reasoning / max**
 - [ ] 1.2 Make the reactor buildable and seed the version constant — `mvn -B clean verify` green on the skeleton, `<version>0.0.0</version>` in the parent `pom.xml` matching the README `Status-v` badge (`version-lockstep`) — size: **S** · route: **standard / medium**
-- [ ] 1.3 Wire JUnit 5 + AssertJ with one passing smoke test under `src/test/java/it/d4np/util/` — size: **S** · route: **standard / medium**
+- [ ] 1.3 Wire JUnit 5 + AssertJ with one passing smoke test under `src/test/java/it/d4np/utils/` — size: **S** · route: **standard / medium**
 - [ ] 1.4 Formatter and linter configs at the reactor root — Spotless (google-java-format), ErrorProne + NullAway + Checkstyle — inherited by every module from the parent POM — size: **M** · route: **standard / high**
 - [ ] 1.5 Stand up the CI matrix (Linux / Windows / macOS on Temurin JDK 17 & 21) with build + test + format + lint. This is what makes every later gate actually run — size: **M** · route: **standard / high**
 - [ ] 1.6 Per-module `module-info.java` (JPMS) for all nine modules, with the test module's `--add-opens` requirement documented (ADR-001, spec §1.1) — size: **M** · route: **frontier-reasoning / high**

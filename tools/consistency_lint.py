@@ -44,11 +44,11 @@ CONFIG = {
     # The file holding the version constant, relative to the repo root, or None if the
     # version lives only in a build manifest the lint should not parse. When None (or the
     # file is absent), version-lockstep derives the source version from the README badge.
-    "version_file": "src/main/java/it/d4np/util/pom.xml",
+    "version_file": "src/main/java/it/d4np/utils/pom.xml",
     # A regex with a single (\d+\.\d+\.\d+) group that extracts the version from that file.
     "version_regex": r"(\d+\.\d+\.\d+)",
     # The source root that pattern code-locations must live under.
-    "src_main": "src/main/java/it/d4np/util",
+    "src_main": "src/main/java/it/d4np/utils",
     # Whether documentation i18n is enabled (gates check 7).
     "i18n_enabled": False,
 }

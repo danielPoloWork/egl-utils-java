@@ -2,7 +2,7 @@
 
 Reproducible performance measurements for `egl-utils-java`. Any performance claim in the
 spec, README, or a PR must be backed by a benchmark here and by code under
-`src/bench/java/it/d4np/util/`. Numbers without a reproducible method
+`src/bench/java/it/d4np/utils/`. Numbers without a reproducible method
 are not evidence.
 
 ## Methodology

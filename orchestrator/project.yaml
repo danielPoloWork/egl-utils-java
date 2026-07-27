@@ -83,13 +83,18 @@ identity:
   project_name:    "egl-utils-java"                    # the repository/directory name on disk, unchanged
                                                        # NOTE: "-utils-" now under-describes the scope;
                                                        # renaming the repo is the maintainer's call, not the agent's
-  project_slug:    "util"                              # SETTLED by the maintainer via the requested source path
-                                                       # "src/main/java/it/d4np/util" (my earlier `egl` proposal is
-                                                       # withdrawn). Read `util` as the FAMILY name, not a
-                                                       # description of contents — modules land at it.d4np.util.core,
-                                                       # .jdbc, .security, … (the commons-lang3 convention).
-                                                       # Dissent on record, maintainer's call stands: see the
-                                                       # namespace note in the hand-off.
+  project_slug:    "utils"                             # CORRECTED 2026-07-27 by the maintainer: the path is
+                                                       # "src/main/java/it/d4np/utils" — PLURAL. The prior value
+                                                       # "util" (singular) was recorded from an earlier reading of
+                                                       # the requested path and was wrong. Read `utils` as the
+                                                       # FAMILY name, not a description of contents — modules land
+                                                       # at it.d4np.utils.core, .jdbc, .security, … (the
+                                                       # commons-lang3 convention). Load-bearing: this slug derives
+                                                       # src_main/src_test/src_bench, the namespace, the import
+                                                       # hint, and the spec filename docs/specs/01_spec_<slug>.md,
+                                                       # so it must be corrected HERE and re-rendered — editing the
+                                                       # generated files alone leaves the next render to revert it
+                                                       # (the R-07 failure mode, docs/security/risk-register.md).
   project_title:   "Java Enterprise Architecture Library"
   project_tagline: "A modular set of Java libraries implementing enterprise design patterns for Spring Boot and Jakarta EE systems — a zero-dependency core plus opt-in capability modules (JDBC, concurrency, security, JSON) and framework adapters."
   project_series:  "Enterprise-Grade Libraries"        # proposed from the parent directory (EGL family)
@@ -118,7 +123,11 @@ ownership:                   # Phase 4 (Q4.1/Q4.2) — every field below was sta
                                       # this field carried is therefore SATISFIED — generated CI may target `main`.
   assignee:        "danielPoloWork"   # follows `owner`; never "@me" (it resolves to whichever actor runs gh)
 
-language:                    # Phase 1 — settled from "src/main/java/it/d4np/util" (Q1.1 + Q1.3 in one answer).
+language:                    # Phase 1 — settled from the maintainer's stated source path (Q1.1 + Q1.3 in one
+                             # answer). The path was recorded here as ".../util" and CORRECTED to ".../utils"
+                             # on 2026-07-27; the historical wording is kept, annotated, rather than rewritten,
+                             # because whether the earlier reading mis-transcribed the answer or the maintainer
+                             # refined it is not something the agent can verify. See identity.project_slug.
   lang:            java
   lang_name:       "Java 21 (LTS)"
   lang_standard:   "Java 21 (LTS) toolchain; --release 17 language/bytecode baseline"
@@ -133,11 +142,11 @@ language:                    # Phase 1 — settled from "src/main/java/it/d4np/u
                              # so SQL is not a declared secondary language here.
   group_path:      "it/d4np"          # Q1.3 — stated by the maintainer (their own reverse domain, not a fallback)
   group_dotted:    "it.d4np"
-  namespace:       "it.d4np.util"     # profiles/java.yaml namespace_pattern: {group_dotted}.{project_slug}
+  namespace:       "it.d4np.utils"     # profiles/java.yaml namespace_pattern: {group_dotted}.{project_slug}
   src_ext:         java
   comment_lang:    "en"      # Q4.7 default, echoed for confirmation; identifiers/API/commits stay English anyway
-  public_include_hint: "import it.d4np.util.*;"   # profile import_idiom
-# Derived: src_main = src/main/java/it/d4np/util   (matches the path the maintainer specified)
+  public_include_hint: "import it.d4np.utils.*;"   # profile import_idiom
+# Derived: src_main = src/main/java/it/d4np/utils  (matches the corrected path; see project_slug)
 
 # --- Phase 2 (Frameworks) is recorded across the fields it actually drives, per the questionnaire:
 # Q2.1 frameworks -> toolchain + spec.architecture; Q2.2 concurrency -> capabilities.threading;
@@ -402,7 +411,7 @@ spec:
     LAYOUT — RESOLVED by ADR-004 (.spec/adr/d4np_java_adr_004_generated_layout.md; status ACCEPTED by
     the owner @danielPoloWork on 2026-07-26 — this note previously read "Proposed, awaiting the owner",
     which was stale). The 9-artifact reactor cannot be expressed inside EADOS's single flat source
-    tree, because a Maven module is a directory with its own pom.xml — so src/main/java/it/d4np/util/core
+    tree, because a Maven module is a directory with its own pom.xml — so src/main/java/it/d4np/utils/core
     would be a PACKAGE, not a module, collapsing the reactor into the one JAR ADR-001 exists to prevent.
     Decision: scaffold renders the governance layer plus one tree; Milestone 1 item 1.1 then establishes
     the reactor and relocates that tree to become the `core` module's source root. Therefore read
@@ -560,7 +569,8 @@ interview:
                              # Corroborated on disk, not merely asserted: licence id/author/year from ./LICENSE,
                              # and `owner` independently confirmed by the git remote
                              # (origin = github.com/danielPoloWork/egl-utils-java).
-    language: asked          # Q1.1 + Q1.3 stated as one path ("src/main/java/it/d4np/util"); Q1.2 = none with a
+    language: asked          # Q1.1 + Q1.3 stated as one path (recorded ".../util", corrected to ".../utils"
+                             # on 2026-07-27 — see identity.project_slug); Q1.2 = none with a
                              # stated reason; the runtime floor was delegated to the agent and matches spec §1.1
     toolchain: defaulted     # Phase 3 — mostly profiles/java.yaml defaults. THREE values are NOT
                              # defaults and are sourced inline: build_tool (Maven, from spec §8 +
