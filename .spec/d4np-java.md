@@ -159,4 +159,4 @@ public class Main {
 * [ADR-001 — Multi-module split & dependency policy (framework independence made structural)](adr/d4np_java_adr_001_module_split.md)
 * [ADR-002 — Error model: `Result<T>` for expected outcomes, unchecked `BusinessException`](adr/d4np_java_adr_002_error_model.md)
 * [ADR-003 — JWT: Nimbus JOSE+JWT selected](adr/d4np_java_adr_003_jwt_library.md)
-* [ADR-004 — Generated repository layout: reconciling the EADOS flat source tree with the Maven reactor](adr/d4np_java_adr_004_generated_layout.md) *(Proposed)*
+* [ADR-004 — Generated repository layout: reconciling the EADOS flat source tree with the Maven reactor](adr/d4np_java_adr_004_generated_layout.md) *(Accepted 2026-07-26 — after this document's 2026-07-14 date)*
