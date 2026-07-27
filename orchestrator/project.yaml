@@ -172,57 +172,72 @@ ci:                          # Profile matrix, re-pointed from Gradle to Maven c
   # additive (the published baseline stays 17), but spec §1.1 names "17 baseline, 21 tested in CI"
   # as the compatibility contract. Amending that contract is the maintainer's call, not a silent
   # toolchain tweak — so the matrix follows the spec and the recommendation stays on record.
-  # CACHE IS CONDITIONAL, and that is a fix, not a style choice. actions/setup-java@v4 with a
-  # `cache:` value HARD-ERRORS when no manifest matches its glob — the bootstrap CI failed with
-  # "No file in ... matched to [**/pom.xml]" at the SETUP step, before any build command ran. The
-  # factory renders no build-manifest template for any language (there is no pom/gradle/cargo
-  # template in .eados-core/templates/), so a cache directive keyed to one cannot succeed until
-  # Milestone 1 creates it. An empty `cache:` value disables caching, so this expression skips the
-  # cache before pom.xml exists and enables it automatically the moment item 1.2 lands — no
-  # follow-up edit needed. Applies to the `benchmark` job too: the ci.yml template injects these
-  # same setup steps there.
+  # OVERRIDE of profiles/java.yaml's `build_manifest: build.gradle.kts`, and it is load-bearing:
+  # this project overrides build_tool to Maven, so the file whose presence proves the build system
+  # exists is pom.xml, not build.gradle.kts. render.py reads ci.build_manifest (not the profile) —
+  # so the manifest wins here. Getting this wrong would be WORSE than leaving it unset: the guard
+  # would probe for a Gradle file this project never creates, and every toolchain job would skip
+  # FOREVER, including after item 1.2 lands the POM. A permanently-skipped gate reads green.
+  build_manifest: "pom.xml"
+  # The bootstrap guard (upstream #313 / lesson L-0010) is why the `cache:` values below are plain
+  # again. An earlier commit in this branch made them conditional on hashFiles('**/pom.xml') because
+  # actions/setup-java HARD-ERRORS when its cache glob matches nothing. That workaround made the jobs
+  # FAIL truthfully; L-0010 is explicit that the correct behaviour is to SKIP: "where a job cannot
+  # succeed until a later roadmap item lands, make it SKIP on a declared condition rather than fail,
+  # and drive that condition from profile data so the guard is generic and self-disables the moment
+  # the item lands." The rendered `bootstrap` job now does exactly that, so setup-java never executes
+  # before pom.xml exists and an unconditional cache is safe. The conditional is withdrawn as an
+  # unnecessary divergence from the profile shape.
   setup_steps: |
     - name: Set up JDK
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
-        cache: ${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}
+        cache: maven
   extra_jobs: |
     quality:
       name: quality / spotless + errorprone + checkstyle + jacoco + pit
       runs-on: ubuntu-24.04
+      needs: bootstrap
+      if: needs.bootstrap.outputs.ready == 'true'
       steps:
         - uses: actions/checkout@v6
         - uses: actions/setup-java@v4
-          with: { distribution: temurin, java-version: '21', cache: "${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}" }
+          with: { distribution: temurin, java-version: '21', cache: maven }
         - run: mvn -B spotless:check checkstyle:check
         - run: mvn -B verify -Pcoverage
         - run: mvn -B -Pmutation test
     jcstress:
       name: jcstress / concurrency stress
       runs-on: ubuntu-24.04
+      needs: bootstrap
+      if: needs.bootstrap.outputs.ready == 'true'
       steps:
         - uses: actions/checkout@v6
         - uses: actions/setup-java@v4
-          with: { distribution: temurin, java-version: '21', cache: "${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}" }
+          with: { distribution: temurin, java-version: '21', cache: maven }
         - run: mvn -B -Pjcstress verify
     compatibility:
       name: compatibility / enforcer + japicmp
       runs-on: ubuntu-24.04
+      needs: bootstrap
+      if: needs.bootstrap.outputs.ready == 'true'
       steps:
         - uses: actions/checkout@v6
         - uses: actions/setup-java@v4
-          with: { distribution: temurin, java-version: '21', cache: "${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}" }
+          with: { distribution: temurin, java-version: '21', cache: maven }
         - run: mvn -B enforcer:enforce
         - run: mvn -B japicmp:cmp
     security:
       name: security / owasp dependency-check
       runs-on: ubuntu-24.04
+      needs: bootstrap
+      if: needs.bootstrap.outputs.ready == 'true'
       steps:
         - uses: actions/checkout@v6
         - uses: actions/setup-java@v4
-          with: { distribution: temurin, java-version: '21', cache: "${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}" }
+          with: { distribution: temurin, java-version: '21', cache: maven }
         - run: mvn -B dependency-check:check
 
 governance:

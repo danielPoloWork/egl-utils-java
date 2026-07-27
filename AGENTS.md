@@ -121,6 +121,13 @@ standalone PR, branched from the `main` commit current when the work starts.
 After pushing the branch and drafting the PR, the agent **stops and waits for the maintainer
 to merge it** before starting the next item. No stacked PRs (the repository squash-merges).
 
+**Model & effort per item (advisory).** A `ROADMAP.md` item may carry a route —
+`route: <tier> / <effort>` in the `os/routing` vocabulary (tiers, not model names; the dated
+catalog in the ROADMAP's routing legend maps tiers to current names, as of
+2026-07-27). Pick the session model accordingly before starting the item; an item
+with no route takes the floor (fast / low). The route is advisory — **the human keeps
+final model authority**, and an agent never switches its own session model.
+
 ### 6.2 Branch naming
 
 Format: `<type>/<short-kebab-description>`, `type ∈ {feat, fix, refactor, perf, docs, test,
