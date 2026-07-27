@@ -60,7 +60,7 @@ Status: ▢ specified-not-implemented · ⚠ **gap** · ✅ implemented & verifi
 | Envelope `keyId` swapped to force decryption under an attacker-chosen key | B4 · envelope `v1:{keyId}:{iv}:{ct+tag}` | The key id is **untrusted input** (B4). GCM authentication fails if the key is wrong, so a swap yields a `CryptoException`, not plaintext. **No AAD binding the envelope header to the ciphertext is specified** — a known FR-12 gap already scheduled to item 6.2 | ⚠ |
 | SQL altered via string concatenation | B1 · `SimpleJdbcExecutor` (FR-05) | Defended **by construction**: no string-concatenation overload exists, so `PreparedStatement` is enforced rather than recommended | ▢ |
 | Injection via `ORDER BY` — a column name cannot be a bind parameter | B1 · `PageRequest` (FR-07) | Sort fields validated against a **caller-supplied whitelist**; violation throws at construction | ▢ |
-| A mutable Action tag re-pointed to attacker code, executing in CI with `GITHUB_TOKEN` | B5 · `.github/workflows/**` | Template-provided actions are SHA-pinned. **11 references authored in the manifest's CI fragments are tag-pinned** (`setup-java@v4`, `checkout@v6`) — see register **R-02** | ⚠ |
+| A mutable Action tag re-pointed to attacker code, executing in CI with `GITHUB_TOKEN` | B5 · `.github/workflows/**` | Template-provided actions are SHA-pinned. **11 references authored in the manifest's CI fragments are tag-pinned** (`setup-java@v5`, `checkout@v7` since the Dependabot merges) — register **R-02**; the merges also created live manifest-vs-rendered drift that a re-render would revert — register **R-07** | ⚠ |
 | Dependency substitution / typosquat pulling a hostile artifact | B5 · Maven resolution | `maven-enforcer` banned-dependency + convergence rules (NFR-08); OWASP Dependency-Check per PR (NFR-11). Neither is active until the reactor exists | ▢ |
 | Published artifact modified between build and consumer | B5 · Maven Central | GPG-signed artifacts + reproducible-build plugin (NFR-12). **No build provenance/attestation** — item 8.5 | ▢ |
 
@@ -110,10 +110,11 @@ Status: ▢ specified-not-implemented · ⚠ **gap** · ✅ implemented & verifi
 
 ## 3. Findings → the risk register
 
-Six threats survived analysis as actionable items and are recorded, scored, in
+Seven threats survived analysis as actionable items and are recorded, scored, in
 [`risk-register.md`](risk-register.md): **R-01** disclosure channel absent, **R-02** unpinned CI
 actions, **R-03** `main` unprotected, **R-04** traceability dangling edges, **R-05** `AuditLog`
-redaction unspecified, **R-06** JWKS trust posture unspecified.
+redaction unspecified, **R-06** JWKS trust posture unspecified, **R-07** rendered workflows drifted
+from the manifest.
 
 No confirmed, reproducible **defect** was found (there is no code to defect), so no
 [bug-ledger](../bugs/README.md) record is opened. No vulnerability warranting coordinated disclosure
