@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Checkstyle configuration for egl-utils-java — ROADMAP item 1.4.
+
+  DIVISION OF LABOUR, deliberate: Spotless (google-java-format) owns FORMATTING — indentation, line
+  length, wrapping, import order, whitespace. This file owns only what a formatter cannot see:
+  naming, import legality, structural correctness, and the project's own documented policies.
+
+  Formatting rules are therefore ABSENT ON PURPOSE. Adding LineLength or WhitespaceAround here would
+  duplicate Spotless and, worse, can contradict it — google-java-format's output is not negotiable,
+  so a Checkstyle rule that disagrees produces an unfixable build.
+
+  The bundled google_checks.xml was considered and rejected for exactly that reason: it enforces
+  formatting that Spotless already governs, so the two would fight over the same lines.
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="error"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- The file must be parseable and the outer type must match the filename. -->
+  <module name="NewlineAtEndOfFile"/>
+
+  <module name="TreeWalker">
+
+    <!-- ===== Project policy, encoded as lint =====================================
+         Spec §1.1 / NFR-07: the jakarta.* namespace only; javax.* is explicitly out of scope.
+         Enumerated by EE package rather than banning `javax` wholesale, because javax.crypto and
+         javax.sql are JDK packages that FR-12 (AesEncryptor) and FR-05 (SimpleJdbcExecutor)
+         legitimately require. A blanket ban would forbid the specification's own design. -->
+    <module name="IllegalImport">
+      <property name="illegalPkgs"
+                value="javax.validation,
+                       javax.persistence,
+                       javax.servlet,
+                       javax.ws,
+                       javax.inject,
+                       javax.transaction,
+                       javax.enterprise,
+                       javax.ejb,
+                       javax.jms"/>
+      <message key="import.illegal"
+               value="javax EE import ''{0}'' — spec §1.1 mandates the jakarta.* namespace (NFR-07). JDK javax packages (javax.crypto, javax.sql) are permitted."/>
+    </module>
+
+    <!-- ===== Imports ============================================================= -->
+    <module name="AvoidStarImport"/>
+    <module name="UnusedImports">
+      <property name="processJavadoc" value="true"/>
+    </module>
+    <module name="RedundantImport"/>
+
+    <!-- ===== Naming ============================================================== -->
+    <module name="PackageName">
+      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+    </module>
+    <module name="TypeName"/>
+    <module name="MethodName"/>
+    <module name="MemberName"/>
+    <module name="ParameterName"/>
+    <module name="LocalVariableName"/>
+    <module name="LocalFinalVariableName"/>
+    <module name="ConstantName"/>
+    <module name="StaticVariableName"/>
+    <module name="MethodTypeParameterName"/>
+    <module name="ClassTypeParameterName"/>
+
+    <!-- ===== Correctness a formatter cannot see ================================== -->
+    <module name="EqualsHashCode"/>
+    <module name="CovariantEquals"/>
+    <module name="StringLiteralEquality"/>
+    <module name="NoFinalizer"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="FallThrough"/>
+    <module name="DefaultComesLast"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="EmptyStatement"/>
+    <module name="IllegalThrow"/>
+    <!-- FR-12/FR-11 hygiene: a caught-and-dropped exception is how crypto and JWT failures become
+         silent. An empty catch must be justified by a comment. -->
+    <module name="EmptyCatchBlock">
+      <property name="exceptionVariableName" value="expected|ignored"/>
+    </module>
+
+    <!-- ===== Structure =========================================================== -->
+    <module name="OneTopLevelClass"/>
+    <module name="OuterTypeFilename"/>
+    <module name="FinalClass"/>
+    <!-- ObjectUtils, StringCaseConverter and ResourceLoaderUtils (RFC-0001) are static-only types;
+         a public implicit constructor on them is a defect the compiler will not report. -->
+    <module name="HideUtilityClassConstructor"/>
+    <module name="InterfaceIsType"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="UpperEll"/>
+    <module name="ModifierOrder"/>
+
+    <!-- ===== Public API documentation =============================================
+         capabilities.public_api is true and japicmp gates binary compatibility (NFR-09), so the
+         public surface IS the product. RFC-0001 puts the nullability/error/thread-safety contract
+         in Javadoc, and the specification relies on it (FR-06 "the Javadoc says so"). Scoped to
+         public only, and overrides/property accessors are exempt so the rule stays about contracts
+         rather than ceremony. -->
+    <module name="JavadocType">
+      <property name="scope" value="public"/>
+    </module>
+    <module name="MissingJavadocMethod">
+      <property name="scope" value="public"/>
+      <property name="allowMissingPropertyJavadoc" value="true"/>
+      <property name="allowedAnnotations" value="Override"/>
+    </module>
+    <module name="NonEmptyAtclauseDescription"/>
+  </module>
+</module>

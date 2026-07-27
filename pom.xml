@@ -66,6 +66,17 @@
          is the same vacuous-green class as the -Pjmh profile finding in item 1.2. -->
     <surefire.version>3.5.6</surefire.version>
     <compiler.plugin.version>3.15.0</compiler.plugin.version>
+
+    <!-- Item 1.4 — quality toolchain. Latest STABLE, pre-releases filtered out. -->
+    <spotless.plugin.version>2.44.5</spotless.plugin.version>
+    <google.java.format.version>1.27.0</google.java.format.version>
+    <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+    <checkstyle.version>10.26.1</checkstyle.version>
+    <errorprone.version>2.50.0</errorprone.version>
+    <nullaway.version>0.12.7</nullaway.version>
+    <!-- NullAway treats this package tree as @NonNull-by-default; everything outside is unannotated
+         and therefore not flagged. Derived from language.namespace in orchestrator/project.yaml. -->
+    <nullaway.annotated.packages>it.d4np.utils</nullaway.annotated.packages>
   </properties>
 
   <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
@@ -130,6 +141,70 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${compiler.plugin.version}</version>
+          <configuration>
+            <!-- ErrorProne runs as a javac plugin, so it needs the compile policy below and the
+                 jdk.compiler exports in .mvn/jvm.config — javac's internals are encapsulated from
+                 JDK 16 on. NullAway is an ErrorProne check, hence the second processor path.
+
+                 ErrorProne's recommended "should stop at FLOW" flag is deliberately OMITTED: its
+                 spelling differs between JDK 17 and 21 (an -XD form vs a long-option form), and the
+                 CI matrix builds BOTH, so one spelling would break the other platform. It is an
+                 optimisation, not a requirement for correctness. (Note: a literal double hyphen
+                 cannot appear in an XML comment, which is why the flags are described, not quoted.) -->
+            <compilerArgs>
+              <arg>-XDcompilePolicy=simple</arg>
+              <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}</arg>
+            </compilerArgs>
+            <annotationProcessorPaths>
+              <path>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_core</artifactId>
+                <version>${errorprone.version}</version>
+              </path>
+              <path>
+                <groupId>com.uber.nullaway</groupId>
+                <artifactId>nullaway</artifactId>
+                <version>${nullaway.version}</version>
+              </path>
+            </annotationProcessorPaths>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.plugin.version}</version>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <version>${google.java.format.version}</version>
+              </googleJavaFormat>
+              <removeUnusedImports/>
+              <importOrder/>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </java>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <configuration>
+            <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <consoleOutput>true</consoleOutput>
+            <failsOnError>true</failsOnError>
+            <violationSeverity>error</violationSeverity>
+          </configuration>
+          <dependencies>
+            <!-- Pin Checkstyle itself: the plugin ships an older engine, and the config above uses
+                 rules whose behaviour changed across engine versions. -->
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -138,5 +213,24 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <!-- Declared here, NOT only in pluginManagement: Maven resolves a goal prefix such as
+         `spotless:check` from <build><plugins> and the default pluginGroups
+         (org.apache.maven.plugins, org.codehaus.mojo). com.diffplug.spotless is in neither, so a
+         management-only entry produces exactly the "No plugin found for prefix 'spotless'" failure
+         the quality job already reported. Versions and configuration stay in pluginManagement above.
+
+         No <executions> are bound on purpose: `mvn clean verify` stays a compile+test cycle, and the
+         quality job invokes these goals explicitly, which is how ci.extra_jobs is written. -->
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
 </project>

@@ -1,7 +1,6 @@
 package it.d4np.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -41,7 +40,9 @@ class BuildContractSmokeTest {
   @DisplayName("the JUnit 5 + AssertJ stack is wired and the package root is it.d4np.utils")
   void toolchainIsWiredAndPackageRootHolds() {
     assertThat(getClass().getPackageName()).isEqualTo("it.d4np.utils");
-    assertThatCode(() -> assertThat(true).isTrue()).doesNotThrowAnyException();
+    // A real AssertJ chain, not a meta-assertion: if assertj-core were absent this class would not
+    // compile, and if the fluent API were broken the description below would never be produced.
+    assertThat(getClass().getSimpleName()).as("test class discovered by surefire").endsWith("Test");
   }
 
   @Test
@@ -49,15 +50,17 @@ class BuildContractSmokeTest {
   void bytecodeTargetsThePublishedBaseline() throws IOException {
     String resource = getClass().getSimpleName() + ".class";
     try (InputStream in = getClass().getResourceAsStream(resource)) {
-      assertThat(in).as("own class file %s must be readable from the classpath", resource).isNotNull();
+      assertThat(in)
+          .as("own class file %s must be readable from the classpath", resource)
+          .isNotNull();
       try (DataInputStream data = new DataInputStream(in)) {
         assertThat(data.readInt()).as("class-file magic").isEqualTo(CLASS_FILE_MAGIC);
         data.readUnsignedShort(); // minor version — not part of the contract
         assertThat(data.readUnsignedShort())
             .as(
-                "class-file major version: %d is Java 17. A higher value means --release/--testRelease"
-                    + " stopped pinning the baseline and the build is silently targeting the JDK it"
-                    + " happens to run on",
+                "class-file major version: %d is Java 17. A higher value means the release"
+                    + " pinning stopped taking effect and the build is silently targeting whichever"
+                    + " JDK it happens to run on",
                 JAVA_17_CLASS_MAJOR)
             .isEqualTo(JAVA_17_CLASS_MAJOR);
       }
