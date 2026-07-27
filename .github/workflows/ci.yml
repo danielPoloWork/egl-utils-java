@@ -108,7 +108,7 @@ jobs:
     needs: bootstrap
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B spotless:check checkstyle:check
@@ -120,7 +120,7 @@ jobs:
     needs: bootstrap
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B -Pjcstress verify
@@ -130,7 +130,7 @@ jobs:
     needs: bootstrap
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B enforcer:enforce
@@ -141,7 +141,7 @@ jobs:
     needs: bootstrap
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B dependency-check:check
