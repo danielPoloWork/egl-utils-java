@@ -68,7 +68,7 @@ dependency order, which is what actually constrains the work:
 
 ```
 M1 ─────────────────────────────────────────► everything (ADR-004: no code before the reactor)
- └─ 1.1 blocks 1.2, 1.3 and all of M2
+ └─ 1.1 blocks 1.2–1.9 and all of M2
 
 M2 ──► M3, M4, M5              [Result/ErrorDetail is the shared error vocabulary]
  │
@@ -82,7 +82,7 @@ M6 + M7 ──► M8                 [japicmp needs a published surface; 8.6 aud
 
 M3, M4, M5 and M6 are mutually independent once M2 lands — with capacity of one they are sequential
 in practice, and the order among them is the owner's priority call, not a technical constraint.
-**8.3 is the exception to that ordering:** it can be pulled forward at any time after 1.4, and doing
+**8.3 is the exception to that ordering:** it can be pulled forward at any time after 1.8, and doing
 so would stop the M2 perf numbers from sitting in an advisory limbo for the whole project.
 
 ## Routing basis
@@ -93,11 +93,11 @@ signal sets and their verdicts:
 | Signals | Verdict | Applied to |
 |---|---|---|
 | `severity:high` + flag `decision-heavy` | **frontier-reasoning / max** | 1.1, 8.3 — a wrong foundational call is the most expensive artifact here |
-| `severity:high` + flag `sets-pattern` | **frontier-reasoning / high** | 1.2, 1.3, 2.1, 2.2, 8.1 — first of its class; every follower copies the template |
+| `severity:high` + flag `sets-pattern` | **frontier-reasoning / high** | 1.6, 1.7, 2.1, 2.2, 8.1 — first of its class; every follower copies the template |
 | `security` + `severity:high` | **frontier-reasoning / high** | 3.3, 4.1, 4.3, 6.1–6.4, 8.4, 8.5, 8.6 — on security posture a subtle miss dwarfs the routing saving |
-| `adr` | **frontier-reasoning / high** | 3.0, 4.0, 5.0, 6.0, 7.0, 5.3 — an RFC- or interface-defining item is decision-heavy by definition |
-| `severity:high` | **standard / high** | 2.3, 2.4, 4.4, 4.5, 5.1, 5.2, 7.1, 7.3, 7.4 |
-| `severity:medium` | **standard / medium** | 1.4, 1.5, 2.5, 3.1, 3.2, 4.2, 7.2, 8.2 |
+| `adr` | **frontier-reasoning / high** | 1.10, 3.0, 4.0, 5.0, 6.0, 7.0, 5.3 — an RFC-, ADR- or interface-defining item is decision-heavy by definition |
+| `severity:high` | **standard / high** | 1.4, 1.5, 2.3, 2.4, 4.4, 4.5, 5.1, 5.2, 7.1, 7.3, 7.4 |
+| `severity:medium` | **standard / medium** | 1.2, 1.3, 1.8, 1.9, 2.5, 3.1, 3.2, 4.2, 7.2, 8.2 |
 
 Two judgment calls, stated because the tool cannot make them: **4.5 `PageRequest` was not labelled
 `security`** even though its sort whitelist is an injection defence — its primary job is pagination,
@@ -119,19 +119,56 @@ is the human's (ADR-0017).
   manifest's `spec.functional_reqs` / `spec.nonfunctional_reqs`.
 - **Gate:** `roadmap-covers-rfcs` must pass before `plan → scaffold` is legal.
 
+## Spec Coverage Map
+
+Tracks which spec section is fulfilled by which roadmap item(s). Every spec section has a row with at
+least one fulfilling item and a status glyph. Legend: ⏳ not started · 🚧 in progress · ✅ done ·
+❎ N/A. Sections follow the six-section shape of `docs/specs/01_spec_util.md`. Read with the
+`check_spec_map` lint: it requires a non-empty items cell and a recognised glyph per row.
+
+Placed **before** the milestone sections on purpose — `traceability.parse_milestones` would otherwise
+absorb this table into Milestone 8's body, the same appendix-bleed that produced a false
+`RFC-0001 → M8` edge in the first draft.
+
+| Spec § | Requirement | Roadmap items | Status |
+|--------|-------------|---------------|--------|
+| §1 | Objective & business context | 1.1, 1.7 | ⏳ |
+| §2 | Functional requirements | 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 6.1, 6.2, 6.3, 7.1, 7.2, 7.3, 7.4 | ⏳ |
+| §3 | Non-functional requirements | 1.5, 1.7, 1.8, 2.2, 2.3, 5.1, 5.2, 6.2, 6.4, 8.1, 8.2, 8.3, 8.4, 8.5 | ⏳ |
+| §4 | Logical architecture | 1.1, 1.6, 1.7 | ⏳ |
+| §5 | Public interface | 2.1, 2.2, 2.3, 2.4, 2.5, 5.3, 8.1 | ⏳ |
+| §6 | Verification & test strategy | 1.3, 1.5, 1.8, 2.2, 5.1, 6.1, 8.2, 8.3, 8.6 | ⏳ |
+
+Two rows worth reading closely. **§1** maps to the reactor and the enforcer rather than to a feature:
+the objective is *framework independence*, and 1.1 + 1.7 are what make it a build property instead of
+a claim (NFR-08). **§3** is the widest row because the NFRs are enforcement, not code — most of them
+land in M1 and M8 rather than in the milestone that implements the thing being measured.
+
 ---
 
-## Milestone 1 — repository foundations
+## Milestone 1 — Project bootstrap & CI
 
-**Goal:** the Maven reactor exists, dependency rules are enforced by the build, and the harness
-skeletons give the NFR gates somewhere to land. **Hard prerequisite for every later milestone** — no
-component code lands before the reactor exists (ADR-004).
+**Goal:** the thinnest slice that compiles, tests and ships under the full quality bar — which for
+this project means the ADR-001 Maven reactor exists first, then the build, tests, quality configs and
+CI matrix stand up on top of it. **Hard prerequisite for every later milestone**: no component code
+lands before the reactor exists (ADR-004).
 
-- [ ] 1.1 Maven reactor skeleton — parent POM, the nine modules of ADR-001, and the BOM; relocate the rendered tree to become the `core` module's source root, updating every generated `src_main`/`src_test`/`src_bench` reference **and** the `consistency_lint.py` path assertions in the same item (ADR-004). Blocks all of M2. — size: **L** · route: **frontier-reasoning / max**
-- [ ] 1.2 Per-module `module-info.java` (JPMS) for all nine modules, with the test module's `--add-opens` requirement documented (ADR-001, spec §1.1) — size: **M** · route: **frontier-reasoning / high**
-- [ ] 1.3 `maven-enforcer` wired with the ADR-001 banned-dependency and convergence rules — this is what makes NFR-08 a build property rather than a review promise — size: **M** · route: **frontier-reasoning / high**
-- [ ] 1.4 JMH (`bench/`) and jcstress (`jcstress/`) harness skeletons so the NFR gates have somewhere to land — size: **S** · route: **standard / medium**
-- [ ] 1.5 `SECURITY.md` with a coordinated-disclosure policy, and `.github/CODEOWNERS` — until CODEOWNERS exists, `ownership.owner` is the live contribution-policy fallback — size: **S** · route: **standard / medium**
+> Items 1.2–1.5 are the factory's universal day-zero bootstrap (`templates/ROADMAP.md.tmpl`); 1.1 and
+> 1.6–1.9 come from `spec.milestone1_items`. The scaffold render and the plan-phase negotiation were
+> merged here rather than one replacing the other — the render carried five bootstrap items the
+> negotiation lacked, and the negotiation carried the sizes and routes the render has no concept of.
+> Title taken from the render so it stays congruent with the generated README milestone table.
+
+- [ ] 1.1 Maven reactor skeleton — parent POM, the nine modules of ADR-001, and the BOM; relocate the rendered tree to become the `core` module's source root, updating every generated `src_main`/`src_test`/`src_bench` reference **and** the `consistency_lint.py` path assertions in the same item (ADR-004). Blocks 1.2–1.9 and all of M2. — size: **L** · route: **frontier-reasoning / max**
+- [ ] 1.2 Make the reactor buildable and seed the version constant — `mvn -B clean verify` green on the skeleton, `<version>0.0.0</version>` in the parent `pom.xml` matching the README `Status-v` badge (`version-lockstep`) — size: **S** · route: **standard / medium**
+- [ ] 1.3 Wire JUnit 5 + AssertJ with one passing smoke test under `src/test/java/it/d4np/util/` — size: **S** · route: **standard / medium**
+- [ ] 1.4 Formatter and linter configs at the reactor root — Spotless (google-java-format), ErrorProne + NullAway + Checkstyle — inherited by every module from the parent POM — size: **M** · route: **standard / high**
+- [ ] 1.5 Stand up the CI matrix (Linux / Windows / macOS on Temurin JDK 17 & 21) with build + test + format + lint. This is what makes every later gate actually run — size: **M** · route: **standard / high**
+- [ ] 1.6 Per-module `module-info.java` (JPMS) for all nine modules, with the test module's `--add-opens` requirement documented (ADR-001, spec §1.1) — size: **M** · route: **frontier-reasoning / high**
+- [ ] 1.7 `maven-enforcer` wired with the ADR-001 banned-dependency and convergence rules — this is what makes NFR-08 a build property rather than a review promise — size: **M** · route: **frontier-reasoning / high**
+- [ ] 1.8 JMH (`bench/`) and jcstress (`jcstress/`) harness skeletons so the NFR gates have somewhere to land — size: **S** · route: **standard / medium**
+- [x] 1.9 `SECURITY.md` with a coordinated-disclosure policy, and `.github/CODEOWNERS` — **done by the scaffold render**: both artifacts landed with the bootstrap, and CODEOWNERS (`* @danielPoloWork`) now supersedes `ownership.owner` as the live contribution-policy fallback — size: **S** · route: **standard / medium**
+- [ ] 1.10 Reconcile the ADR record — `docs/adr/README.md` indexes **two** ADRs (0001, 0002, both generated) while this project has **six**: the four Accepted decisions (module split, error model, JWT library, generated layout) live in `.spec/adr/` as `d4np_java_adr_00N_*.md`, outside the docs system, unindexed, and in a different naming convention. A reader of `docs/adr/` therefore sees two decisions where six were made. The decision this item must settle: renumber them into the `docs/adr/NNNN-kebab.md` convention as 0003–0006 (correct, but invalidates every existing `ADR-001`…`ADR-004` reference in the spec, the manifest, the core-contracts RFC (`docs/rfc/0001-core-contracts.md`) and this file) **or** index them in place and record why the numbering diverges. Not prescribed here — size: **M** · route: **frontier-reasoning / high**
 
 ## Milestone 2 — core foundations
 
