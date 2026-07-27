@@ -5,17 +5,17 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 3              # bumped with the plan -> scaffold transition recorded below. The write was
-                             # guarded (#214): re-proposed with --expect-rev 2 immediately beforehand,
+manifest_rev: 4              # bumped with the scaffold -> audit transition recorded below. The write was
+                             # guarded (#214): re-proposed with --expect-rev 3 immediately beforehand,
                              # which confirmed no other session had moved the rev.
 domain: software             # development target (Q0.4) -> .eados-core/orchestrator/domains/software.yaml
 
 # delivery_state holds STATE + cross-link REFS (ids), never content (RFC-0001 §8).
 delivery_state:
-  phase: scaffold            # init|design|plan|scaffold|audit|migrate — the acting role is now
-                             # enterprise-architect (owns AGENTS.md, docs/adr/**, .github/**, tools/**,
-                             # .eados-core/**), no longer producer. NOTE scaffold -> audit is the ONE
-                             # transition in the machine with human_gate: false.
+  phase: audit               # init|design|plan|scaffold|audit|migrate — the acting role is now
+                             # security-auditor (owns docs/security/**), no longer enterprise-architect.
+                             # This is the standing gate before a release; audit -> migrate is
+                             # human-gated and currently BLOCKED (see the audit note below).
   # Transition ledger (#199) — a legal, contiguous chain ending at `phase`. A human-gated move carries
   # confirmed_by AND gate_results, so the record is evidence rather than honour (#250). Emitted verbatim
   # by `phase_runner --propose design`; the owner's confirmation substitutes for the <owner> placeholder.
@@ -23,6 +23,29 @@ delivery_state:
     - { from: init, to: design, gates: ['manifest-valid'], at: 2026-07-26, confirmed_by: danielPoloWork, gate_results: { manifest-valid: OK } }
     - { from: design, to: plan, gates: ['rfc-approved'], at: 2026-07-27, confirmed_by: danielPoloWork, gate_results: { rfc-approved: OK } }
     - { from: plan, to: scaffold, gates: ['roadmap-covers-rfcs'], at: 2026-07-27, confirmed_by: danielPoloWork, gate_results: { roadmap-covers-rfcs: OK } }
+    - { from: scaffold, to: audit, gates: ['consistency-lint', 'self-review'], at: 2026-07-27, gate_results: { consistency-lint: manual, self-review: manual } }
+  # ^ emitted verbatim by `phase_runner --propose audit --roadmap ROADMAP.md --expect-rev 3`. NO
+  #   confirmed_by, and that is correct rather than an omission: scaffold -> audit is the ONE
+  #   transition with human_gate: false, so the owner does not confirm it — the gates alone carry it.
+  #   `manual` is what the evaluator emits for a `wired: external` gate it cannot compute itself. Per
+  #   L-0010's sibling L-0006 ("partial verification presented as complete is a dishonest gate"), the
+  #   evidence behind both marks is stated rather than left to trust: both ran on merged main at
+  #   19c2de2 and both printed OK — `tools/consistency_lint.py` -> "all congruence invariants hold",
+  #   `self_review.py .` -> "the generated repo is structurally complete".
+  #
+  # AUDIT NOTE (audit.md step 5 — "note the audit in delivery_state"). There is no `refs.audits` key
+  # in the schema, so the record lives here as a comment rather than as invented structure:
+  #   run 2026-07-27, first audit  ->  docs/security/risk-register.md
+  #   risk score: CRITICAL (security-surface, large-change, wide-blast-radius); security-auditor
+  #     gate REQUIRED, so the STRIDE pass was mandatory -> docs/security/threat-model.md
+  #   traceability-lint: FAIL — 2 dangling edges (PR 1, PR 2 carry no RFC; both predate RFC-0001)
+  #   6 findings: R-01 high (disclosure channel disabled), R-02 medium (11 unpinned CI actions),
+  #     R-03 medium (main unprotected), R-04 medium (the dangling edges above), R-05 high (AuditLog
+  #     redaction unspecified), R-06 medium (JWKS trust posture unspecified)
+  # CONSEQUENCE FOR THE NEXT MOVE: audit -> migrate lists traceability-lint as a BLOCKING entry gate,
+  # and it currently FAILS. So that transition is NOT takeable until R-04 is decided — and R-04 wants
+  # a policy decision (exempt governance PRs from the RFC edge), not a data fix. Backfilling fake RFC
+  # ids onto PRs 1 and 2 would turn the gate green by writing a falsehood into the evidence trail.
   # ^ emitted verbatim by `phase_runner --propose plan --rfc docs/rfc/0001-core-contracts.md
   #   --expect-rev 1`; the owner's in-session confirmation substitutes for the <owner> placeholder.
   #   gate_results is EVIDENCE, not honour (#250): rfc-approved=OK was computed live by rfc_check

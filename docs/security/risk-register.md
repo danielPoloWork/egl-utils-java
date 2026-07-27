@@ -1,0 +1,88 @@
+# Audit risk register — egl-utils-java
+
+The **outcome** side of the security surface: scored findings of a concrete audit run.
+`SECURITY.md` is the policy, [`threat-model.md`](threat-model.md) is the STRIDE analysis,
+[`../compliance/README.md`](../compliance/README.md) is the standing control register — this file
+records what a given audit actually found.
+
+> **Location note.** `docs/security/README.md` places the register in "audit records" without naming
+> a path, and no such directory is scaffolded. It is filed here, beside the threat model it derives
+> from and inside the `security-auditor`'s own directory. Recorded as a choice, not a convention.
+
+---
+
+## Run 2026-07-27 — first audit
+
+| | |
+|---|---|
+| **Phase** | `scaffold → audit` (`human_gate: false`; entry gates `consistency-lint`, `self-review` both green) |
+| **Subject** | PR #9, the bootstrap scaffold — 46 files, 2942 lines changed |
+| **Risk score** | **critical** — factors: `security-surface`, `large-change`, `wide-blast-radius` |
+| **Security-auditor gate** | **REQUIRED** (`mandatory_gate_level: high`, `domain=software`) — so the STRIDE pass was mandatory |
+| **Traceability-lint** | **FAIL** — 2 dangling edges (see R-04) |
+| **Threat model** | [`threat-model.md`](threat-model.md), 6 boundaries × 6 STRIDE categories, every cell filled |
+
+**Why "critical" is not alarming here, and why it still earned a real audit.** The score is
+mechanical: any change touching `.github/**`, `tools/**` or `SECURITY.md` scores
+`security_surface: 3`, and the bootstrap render touches all three plus 2942 lines across six
+top-level areas. A first scaffold will therefore always score critical. That is the scorer working
+as designed, not a judgement that the repo is dangerous — and the correct response is to do the deep
+audit rather than to explain the number away. Doing it surfaced two live findings (**R-01**, **R-03**)
+that have nothing to do with the render's size.
+
+**Standing caveat on every finding below.** `src/` holds only `.gitkeep` — there is no product code.
+So no finding is a code defect; every one is a **control that is absent, unenforced, or
+unspecified**. The severities reflect realistic impact *once the specified code exists*, except
+R-01/R-02/R-03, which are live today.
+
+### Findings
+
+| ID | Severity | Component | Finding | Realistic impact | Mitigation | Owner item |
+|---|---|---|---|---|---|---|
+| **R-01** | **high** | `SECURITY.md` · repo settings | `SECURITY.md` directs reporters to GitHub private vulnerability reporting, but the feature is **disabled** — verified: `GET /repos/…/private-vulnerability-reporting` → `{"enabled": false}` | The documented channel does not exist. A researcher following the policy finds no *Report a vulnerability* option; the realistic fallback is a **public issue** — precisely what the policy's first bold line forbids. For a library shipping JWT and AES primitives, that means a live vulnerability disclosed in the open before a fix exists | Enable private vulnerability reporting (Settings → Security → *Private vulnerability reporting*). One toggle, no code. Until then `SECURITY.md` overstates what the repo supports | **new** — needs a roadmap item or immediate owner action |
+| **R-02** | **medium** | `.github/workflows/**` | **11 action references are tag-pinned, not SHA-pinned** — `setup-java@v4` (×6), `checkout@v6` (×4), `setup-java@v4` in `release.yml`. All 11 come from the *manifest-authored* `ci.setup_steps` / `ci.extra_jobs`; every template-provided action **is** SHA-pinned (`checkout@3d3c42e5… # v7.0.1`) | A mutable tag re-pointed at attacker code executes in CI with a repo-scoped `GITHUB_TOKEN`, and in `release.yml` alongside the GPG signing step. Impact is bounded today because the toolchain jobs **skip** until `pom.xml` exists, and no secrets beyond `GITHUB_TOKEN` are in play — but `release.yml` is the one that matters at 1.0.0 | Pin all 11 to SHAs in `orchestrator/project.yaml` and re-render. The inconsistency is instructive: the factory pins what *it* controls, and manifest-authored fragments silently escape that discipline | **8.5** (NFR-12 gap) |
+| **R-03** | **medium** | repo settings · `main` | **Branch protection is absent** — `GET /repos/…/branches/main/protection` → **404**, while the repo is **public**. `AGENTS.md` §6 names public/Pro as exactly the condition that unblocks the full ruleset | Nothing mechanically prevents a direct push to `main`, a force-push, or a merge that bypasses review. The contract's "one PR at a time, owner squash-merges" is policy honoured by habit, not enforcement. Note PR #9 merged as a **merge commit** although the contract states squash-only — evidence the setting is not in force | Enable the ruleset: require a PR, squash-only, no force-push, no deletion, linear history; `docs/workflow/github-setup.md` carries the one-time steps | **1.9-adjacent** — needs a roadmap item; `github-setup.md` documents it but nothing tracks it |
+| **R-04** | **medium** | traceability graph | `traceability-lint` **FAILS**: `[pr-no-rfc] PR 2`, `[pr-no-rfc] PR 1`. Both predate RFC-0001 — #1 bootstrapped the governed project, #2 recorded the `init → design` transition | `traceability-lint` is `blocking: true` and an **entry gate of `audit → migrate`**, so this blocks that transition until resolved. It is not a data error: those PRs genuinely implement no requirement. Assigning them an RFC retroactively would be a lie recorded as evidence | Decide the policy: exempt governance/phase-record PRs from the RFC edge (the honest reading), or narrow `derive_links.py`, which currently emits any PR carrying a milestone and then hands the lint PRs it must fail. Do **not** backfill fake RFC ids | **new** — needs a decision before `audit → migrate` |
+| **R-05** | **high** | `AuditLog` (FR-16) | **No redaction policy specified.** As written, `AuditLog` records before/after values of every state change | An audit store is typically retained longer and replicated wider than application logs. Faithfully recording secrets and PII into it converts a compliance feature into the project's widest data-leak surface — and under `posture: enterprise` this is exactly the control class the bar exists for | Field-level allowlisting, a `@Sensitive` opt-out, an explicit never-capture list — settled in **RFC-0002 before any code**, which is why item 3.0 blocks 3.3 | **3.0 → 3.3** |
+| **R-06** | **medium** | `JwtTokenProvider` (FR-11) · JWKS | **JWKS trust posture unspecified.** ADR-003 pins caching and rate-limited refresh but says nothing about TLS verification, certificate/key pinning, or an allowlist of permitted JWKS origins | If a JWKS URL is caller-configurable, an attacker who can influence it (SSRF, config injection, DNS) serves their own key document and every subsequent token verifies. Relying on the JDK default trust store is a reasonable floor but an unstated one — and "unstated" is what this audit exists to catch | Specify in **RFC-0005**: JWKS origin allowlist, explicit TLS posture, and whether the URL may come from caller config at all | **6.0 → 6.1** |
+
+### Positive controls — verified, not assumed
+
+Recorded because an audit that lists only problems misrepresents the posture:
+
+- **Secret scanning enabled** and **push protection enabled** (verified via the repo API). A targeted
+  scan for literal `password=`/`token=`/`api_key=`/PEM material across the tree found **nothing**.
+- **`consistency-lint` and `self-review` both green** on merged `main` — the `scaffold → audit` entry
+  gates were satisfied by evidence, not asserted.
+- **Injection defended by construction, not by discipline** — `SimpleJdbcExecutor` offers no
+  string-concatenation overload, so `PreparedStatement` cannot be bypassed by a careless caller. This
+  is the strongest control in the specification.
+- **`OutputEncoder` correctly scoped** — v1 specified an input "sanitizer" against XSS and SQL
+  injection; v2 rescoped it to context-aware *output* encoding. Removing a false-security control is
+  a security improvement that a register would otherwise never credit.
+- **Dependency hygiene is structural** — `maven-enforcer` makes the zero-dependency core a build
+  property (NFR-08), so a PR leaking `com.fasterxml` into core fails the build rather than review.
+
+### Not found
+
+- **No code defect** — there is no product code, so no [bug-ledger](../bugs/README.md) record.
+- **No vulnerability warranting coordinated disclosure** — hence no draft advisory. Worth noting that
+  opening one today would be blocked by **R-01** itself.
+- **`dependabot_security_updates: disabled`** was observed but is *not* filed as a finding:
+  `.github/dependabot.yml` ships version updates for 2 ecosystems and NFR-11 puts OWASP
+  Dependency-Check on every PR, so CVE coverage is specified by another control. Enabling it is
+  cheap hardening, not a gap. Recorded here so the observation is not silently dropped.
+
+### Disposition
+
+Two findings are **live today and fixable with a settings toggle** — R-01 and R-03. Both are owner
+actions; neither needs code, a PR, or a milestone. R-01 is the one to do first: it is `high`, it takes
+one click, and until it is done the project's stated security policy is a promise the repository does
+not keep.
+
+R-02 has a scheduled owner (8.5). R-05 and R-06 are correctly sequenced behind their RFCs (3.0, 6.0) —
+the roadmap already blocks the implementing items on them, which is the contract-first ordering
+working as intended. **R-04 needs a decision**, not a fix, and it blocks `audit → migrate`.
+
+Three findings — R-01, R-03, R-04 — have **no roadmap item**. They are recorded here, but a register
+entry is not a plan; they need items or owner action to become tracked work.
