@@ -5,21 +5,40 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 1              # bumped with the init -> design transition recorded below. The write was
-                             # guarded (#214): re-proposed with --expect-rev 0 immediately beforehand,
+manifest_rev: 2              # bumped with the design -> plan transition recorded below. The write was
+                             # guarded (#214): re-proposed with --expect-rev 1 immediately beforehand,
                              # which confirmed no other session had moved the rev.
 domain: software             # development target (Q0.4) -> .eados-core/orchestrator/domains/software.yaml
 
 # delivery_state holds STATE + cross-link REFS (ids), never content (RFC-0001 §8).
 delivery_state:
-  phase: design              # init|design|plan|scaffold|audit|migrate — the acting role is now
-                             # tech-lead (owns docs/rfc/**, src/**), no longer enterprise-architect.
+  phase: plan                # init|design|plan|scaffold|audit|migrate — the acting role is now
+                             # producer (owns ROADMAP.md, docs/releases/**), no longer tech-lead.
   # Transition ledger (#199) — a legal, contiguous chain ending at `phase`. A human-gated move carries
   # confirmed_by AND gate_results, so the record is evidence rather than honour (#250). Emitted verbatim
   # by `phase_runner --propose design`; the owner's confirmation substitutes for the <owner> placeholder.
   checkpoints:
     - { from: init, to: design, gates: ['manifest-valid'], at: 2026-07-26, confirmed_by: danielPoloWork, gate_results: { manifest-valid: OK } }
-  refs: { rfcs: [], milestones: [], prs: [1], releases: [] }   # PR #1 = the bootstrap PR (traceability edge)
+    - { from: design, to: plan, gates: ['rfc-approved'], at: 2026-07-27, confirmed_by: danielPoloWork, gate_results: { rfc-approved: OK } }
+  # ^ emitted verbatim by `phase_runner --propose plan --rfc docs/rfc/0001-core-contracts.md
+  #   --expect-rev 1`; the owner's in-session confirmation substitutes for the <owner> placeholder.
+  #   gate_results is EVIDENCE, not honour (#250): rfc-approved=OK was computed live by rfc_check
+  #   against docs/rfc/0001-core-contracts.md, whose approval record the owner authorized. CAVEAT
+  #   the gate cannot see: rfc_check is STRUCTURAL — it verifies the record exists and names the
+  #   approver role. Procedure step 3 (independent reviewer / enterprise-architect findings) did
+  #   NOT run for RFC-0001; the RFC's own Approval section states this. The OK is therefore honest
+  #   about what it checked and silent about peer review, which never happened.
+  # NAMING COLLISION, disambiguated: the `RFC-0001` in the comment on line 13 is EADOS's OWN
+  # RFC-0001 (the delivery-OS design, .eados-core/docs/rfc/0001-eados-delivery-os.md). The
+  # `RFC-0001` in `rfcs` below is THIS PROJECT's, docs/rfc/0001-core-contracts.md. Same id, two
+  # contracts — the two-contracts rule (AGENTS.md §preamble). traceability.py matches only the
+  # list values, never the comments, so the collision is cosmetic; it is spelled out so a reader
+  # does not conflate them.
+  # `milestones` stays empty deliberately: the roadmap milestone ids arrive with ROADMAP.md, which
+  # the `plan` phase (producer) authors. The roadmap-covers-rfcs gate — which requires a milestone
+  # section to reference RFC-0001 by id — belongs to plan -> scaffold, not to this transition.
+  refs: { rfcs: ['RFC-0001'], milestones: [], prs: [1, 4], releases: [] }
+  # PR #1 = the bootstrap PR; PR #4 = the PR that landed RFC-0001 (both traceability edges)
 
 identity:
   # Scope reconciled 2026-07-26: the maintainer confirmed `.spec/d4np-java.md` (reviewed draft
