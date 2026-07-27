@@ -17,13 +17,13 @@ sibling projects diverge and the agent's mental model has to be relearned per re
 We adopt a **Maven-style cross-language source tree**:
 
 ```text
-src/main/java/it/d4np/util/    # production sources
-src/test/java/it/d4np/util/    # test sources
-src/bench/java/it/d4np/util/   # benchmarks (where applicable)
+src/main/java/it/d4np/utils/    # production sources
+src/test/java/it/d4np/utils/    # test sources
+src/bench/java/it/d4np/utils/   # benchmarks (where applicable)
 ```
 
-For this repository `<lang>` = `java` and the namespace/package is `it.d4np.util`,
-mirroring the path. Subdivision inside `util/` is by **component**, not by file
+For this repository `<lang>` = `java` and the namespace/package is `it.d4np.utils`,
+mirroring the path. Subdivision inside `utils/` is by **component**, not by file
 type. This layout is **normative** for every sibling project; only the `<lang>` segment and
 the language's native namespace idiom change.
 
@@ -42,7 +42,7 @@ the language's native namespace idiom change.
   ecosystems need a small shim (e.g. a build manifest pointing at the nested path).
 - The layout is enforceable: code outside the tree is a review failure, and changing the
   shape requires superseding this ADR.
-- Consumers import the public surface via `import it.d4np.util.*;`.
+- Consumers import the public surface via `import it.d4np.utils.*;`.
 
 ## References
 

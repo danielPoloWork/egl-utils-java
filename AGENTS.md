@@ -44,7 +44,7 @@ match that language, but anything that lands on disk or in Git is English-only.
 `egl-utils-java` is part of the **Enterprise-Grade Libraries** series and
 is **A modular set of Java libraries implementing enterprise design patterns for Spring Boot and Jakarta EE systems — a zero-dependency core plus opt-in capability modules (JDBC, concurrency, security, JSON) and framework adapters.**.
 
-The full specification is in [`docs/specs/01_spec_util.md`](docs/specs/01_spec_util.md).
+The full specification is in [`docs/specs/01_spec_utils.md`](docs/specs/01_spec_utils.md).
 The current plan and progress live in [`ROADMAP.md`](ROADMAP.md).
 
 This project is held to the **enterprise governance posture** (`governance.posture: enterprise`,
@@ -63,9 +63,9 @@ decisions, stricter review, and a maintained compliance-docs surface. The raised
 ├── ROADMAP.md                      # numbered checkbox roadmap, updated as work completes
 ├── LICENSE
 ├── src/                            # all source code lives here — see §5
-│   ├── main/java/it/d4np/util/
-│   ├── test/java/it/d4np/util/
-│   └── bench/java/it/d4np/util/    # where applicable
+│   ├── main/java/it/d4np/utils/
+│   ├── test/java/it/d4np/utils/
+│   └── bench/java/it/d4np/utils/    # where applicable
 ├── docs/
 │   ├── adr/                        # Architecture Decision Records
 │   ├── patterns/                   # design-patterns catalogue + taxonomy
@@ -83,18 +83,18 @@ All code lives under a **Maven-style cross-language source tree** so that siblin
 in any language share the same shape:
 
 ```text
-src/main/java/it/d4np/util/    # production sources
-src/test/java/it/d4np/util/    # test sources
-src/bench/java/it/d4np/util/   # benchmarks (where applicable)
+src/main/java/it/d4np/utils/    # production sources
+src/test/java/it/d4np/utils/    # test sources
+src/bench/java/it/d4np/utils/   # benchmarks (where applicable)
 ```
 
 For this repository:
 
-- `<lang>` = `java`, `<project>` = `util`
-- Namespace / package: **`it.d4np.util`** — mirrors the path
-- Consumers import via: `import it.d4np.util.*;`
+- `<lang>` = `java`, `<project>` = `utils`
+- Namespace / package: **`it.d4np.utils`** — mirrors the path
+- Consumers import via: `import it.d4np.utils.*;`
 
-Subdivision inside `util/` is by **component**, not by file type. **This layout
+Subdivision inside `utils/` is by **component**, not by file type. **This layout
 is normative.** Do not place code at the repository root or in any other shape without
 first superseding [ADR-0002](docs/adr/0002-adopt-cross-language-source-layout.md).
 
@@ -239,7 +239,7 @@ value. Therefore:
 ## 9. Coding Conventions
 
 - **Language standard:** Java 21 (LTS) toolchain; --release 17 language/bytecode baseline.
-- **Namespace / package:** `it.d4np.util`.
+- **Namespace / package:** `it.d4np.utils`.
 - **Formatting:** enforced by `Spotless (google-java-format)` (config at the repo root).
 - **Static analysis:** enforced by `ErrorProne + NullAway + Checkstyle; maven-enforcer for the ADR-001 dependency rules`; warnings-as-errors on the diff at CI.
 - **Documentation:** all public symbols documented with `Javadoc`-compatible comments.

@@ -11,8 +11,8 @@ is the source of truth.**
 - **Language:** every artifact (code, docs, commits, branches, PRs) is in **English**. User
   conversation may be in another language; output that lands on disk stays English. §2.
 - **Source layout:** Maven-style cross-language tree. All code under
-  `src/main/java/it/d4np/util/` (tests under `src/test/...`,
-  benchmarks under `src/bench/...`). Namespace `it.d4np.util`. See §5.
+  `src/main/java/it/d4np/utils/` (tests under `src/test/...`,
+  benchmarks under `src/bench/...`). Namespace `it.d4np.utils`. See §5.
 - **Git:** agents commit, push, and *draft* PRs on feature branches. **The user opens and
   merges PRs manually.** One roadmap item per PR, **one PR at a time — wait for the merge
   before starting the next item; no stacked PRs.** Conventional Commits, branch

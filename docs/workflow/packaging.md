@@ -7,7 +7,7 @@ because the project is distributed via a package registry (`capabilities.packagi
 
 - **What ships:** the package produced by `Maven 3.9+ (multi-module reactor)` (and its contents — runtime only,
   no tests/benches).
-- **Consumers import it via:** `import it.d4np.util.*;`.
+- **Consumers import it via:** `import it.d4np.utils.*;`.
 - **Metadata:** name, version (from `pom.xml`), license `MIT`, and the
   links a registry expects (repo, docs, changelog).
 

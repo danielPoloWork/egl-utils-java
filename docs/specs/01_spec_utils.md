@@ -92,7 +92,7 @@ Rules, CI-enforced by maven-enforcer + japicmp:
 LAYOUT — RESOLVED by ADR-004 (.spec/adr/d4np_java_adr_004_generated_layout.md; status ACCEPTED by
 the owner @danielPoloWork on 2026-07-26 — this note previously read "Proposed, awaiting the owner",
 which was stale). The 9-artifact reactor cannot be expressed inside EADOS's single flat source
-tree, because a Maven module is a directory with its own pom.xml — so src/main/java/it/d4np/util/core
+tree, because a Maven module is a directory with its own pom.xml — so src/main/java/it/d4np/utils/core
 would be a PACKAGE, not a module, collapsing the reactor into the one JAR ADR-001 exists to prevent.
 Decision: scaffold renders the governance layer plus one tree; Milestone 1 item 1.1 then establishes
 the reactor and relocates that tree to become the `core` module's source root. Therefore read
@@ -104,7 +104,7 @@ prerequisite for M2, and NFR-08/NFR-09 enforcement is downstream of it.
 <!-- The API contract (the design "api" fold): each operation with its payload shapes, the error
      model (the failure taxonomy, not just the happy path), and the versioning / SemVer surface.
      A service/web project may keep the written-out contract under docs/api/ (capabilities.api_spec). -->
-Consumers import via `import it.d4np.util.*;`. The public surface:
+Consumers import via `import it.d4np.utils.*;`. The public surface:
 
 - Lazy<T>: get() non-null (initializer returning null -> IllegalStateException); initializer-exception policy per option; safe publication guaranteed (jcstress).
 - StrategyRegistry<K,S>: find(K) -> Optional<S>, getOrThrow(K) -> S or StrategyNotFoundException listing known keys; never returns null; fully concurrent; register is last-write-wins with a warning log.

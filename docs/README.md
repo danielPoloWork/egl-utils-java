@@ -25,7 +25,7 @@ conversational context and scratch notes do not live here.
 
 1. [`/README.md`](../README.md) — what this project is.
 2. [`/AGENTS.md`](../AGENTS.md) — how agents (and humans) work in this repo.
-3. [`specs/01_spec_util.md`](specs/01_spec_util.md) — what we are building.
+3. [`specs/01_spec_utils.md`](specs/01_spec_utils.md) — what we are building.
 4. [`development/local-build.md`](development/local-build.md) — how to build and test it.
 5. [`adr/`](adr/) — why we built it that way.
 6. [`patterns/`](patterns/) — which design patterns we exercise and why.
