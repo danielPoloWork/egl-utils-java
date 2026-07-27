@@ -17,4 +17,5 @@ Status transitions: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `D
 | ADR | Title | Status |
 |-----|-------|--------|
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
-| [0002](0002-adopt-cross-language-source-layout.md) | Adopt the cross-language source layout | Accepted |
+| [0002](0002-adopt-cross-language-source-layout.md) | Adopt the cross-language source layout | Superseded by ADR-0003 |
+| [0003](0003-maven-reactor-layout.md) | Adopt the Maven reactor layout, superseding the flat source tree | Accepted |

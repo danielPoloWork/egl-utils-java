@@ -1,6 +1,6 @@
 # ADR-0002: Adopt the cross-language source layout
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-0003](0003-maven-reactor-layout.md) (2026-07-27)
 - **Date:** 2026-01-01
 - **Deciders:** Maintainer
 - **Related:** ADR-0001, AGENTS.md §5
@@ -11,6 +11,12 @@
 enterprise structure regardless of implementation language. Source trees vary widely by
 language ecosystem (`src/`, flat package roots, `pkg/`, crate roots). Without a fixed shape,
 sibling projects diverge and the agent's mental model has to be relearned per repo.
+
+> **Superseded.** The single flat tree below held until ROADMAP item 1.1 established the
+> nine-module Maven reactor of ADR-001. This ADR closed with "changing the shape requires
+> superseding this ADR"; [ADR-0003](0003-maven-reactor-layout.md) is that supersession and
+> states what carried over (the `it.d4np.utils` package root, component-based subdivision,
+> the cross-language shape) and what did not (one source root).
 
 ## Decision
 

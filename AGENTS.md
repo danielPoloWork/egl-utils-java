@@ -83,10 +83,19 @@ All code lives under a **Maven-style cross-language source tree** so that siblin
 in any language share the same shape:
 
 ```text
-src/main/java/it/d4np/utils/    # production sources
-src/test/java/it/d4np/utils/    # test sources
-src/bench/java/it/d4np/utils/   # benchmarks (where applicable)
+pom.xml                                        # parent, packaging: pom (the reactor)
+d4np-core/src/main/java/it/d4np/utils/         # production sources
+d4np-core/src/test/java/it/d4np/utils/         # test sources
+d4np-core/src/bench/java/it/d4np/utils/        # benchmarks (where applicable)
+d4np-jdbc/  d4np-concurrent/  d4np-security/  d4np-json/
+d4np-spring-adapter/  d4np-lock-redisson/  d4np-test/  d4np-bom/
 ```
+
+> **Superseded shape.** This was a single flat tree until ROADMAP item 1.1 established the
+> nine-module reactor of ADR-001. See [ADR-0003](docs/adr/0003-maven-reactor-layout.md), which
+> supersedes ADR-0002. The package root `it.d4np.utils` is unchanged and still mirrors the path —
+> *within each module*. `orchestrator/project.yaml` derives `src_main` as the flat path; read that
+> value as **core's package root**, not the repository's only source root.
 
 For this repository:
 

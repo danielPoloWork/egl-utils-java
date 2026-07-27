@@ -40,15 +40,25 @@ import sys
 # ---------------------------------------------------------------------------
 # CONFIG — filled by EADOS at generation time from orchestrator/project.yaml.
 # ---------------------------------------------------------------------------
+# ITEM 1.1 / ADR-0003: both paths below were corrected by hand when the Maven reactor replaced the
+# flat source tree. The renderer joins src_main with version_file, which for a
+# build-manifest version resolves to a path that can never exist (src/main/.../pom.xml) — leaving
+# version-lockstep to compare the README badge against itself and always pass. The parent POM is at
+# the repo root, so version_file is now "pom.xml" and the check is real. src_main points at core's
+# package root, per ADR-0003. A re-render reverts both; that divergence is ADR-0003's recorded cost.
 CONFIG = {
     # The file holding the version constant, relative to the repo root, or None if the
     # version lives only in a build manifest the lint should not parse. When None (or the
     # file is absent), version-lockstep derives the source version from the README badge.
-    "version_file": "src/main/java/it/d4np/utils/pom.xml",
+    "version_file": "pom.xml",
     # A regex with a single (\d+\.\d+\.\d+) group that extracts the version from that file.
-    "version_regex": r"(\d+\.\d+\.\d+)",
+    # ANCHORED to the <version> element: the rendered default r"(\d+\.\d+\.\d+)" is unanchored
+    # and matches "maven-4.0.0.xsd" in the schemaLocation URL, which appears BEFORE the project
+    # version — so it read 4.0.0 and failed against the badge. Fine for a Version.java constant,
+    # wrong for an XML build manifest. <modelVersion> does not match: the pattern needs "<version>".
+    "version_regex": r"<version>(\d+\.\d+\.\d+)</version>",
     # The source root that pattern code-locations must live under.
-    "src_main": "src/main/java/it/d4np/utils",
+    "src_main": "d4np-core/src/main/java/it/d4np/utils",
     # Whether documentation i18n is enabled (gates check 7).
     "i18n_enabled": False,
 }
