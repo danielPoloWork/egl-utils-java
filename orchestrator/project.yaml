@@ -5,21 +5,24 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 2              # bumped with the design -> plan transition recorded below. The write was
-                             # guarded (#214): re-proposed with --expect-rev 1 immediately beforehand,
+manifest_rev: 3              # bumped with the plan -> scaffold transition recorded below. The write was
+                             # guarded (#214): re-proposed with --expect-rev 2 immediately beforehand,
                              # which confirmed no other session had moved the rev.
 domain: software             # development target (Q0.4) -> .eados-core/orchestrator/domains/software.yaml
 
 # delivery_state holds STATE + cross-link REFS (ids), never content (RFC-0001 §8).
 delivery_state:
-  phase: plan                # init|design|plan|scaffold|audit|migrate — the acting role is now
-                             # producer (owns ROADMAP.md, docs/releases/**), no longer tech-lead.
+  phase: scaffold            # init|design|plan|scaffold|audit|migrate — the acting role is now
+                             # enterprise-architect (owns AGENTS.md, docs/adr/**, .github/**, tools/**,
+                             # .eados-core/**), no longer producer. NOTE scaffold -> audit is the ONE
+                             # transition in the machine with human_gate: false.
   # Transition ledger (#199) — a legal, contiguous chain ending at `phase`. A human-gated move carries
   # confirmed_by AND gate_results, so the record is evidence rather than honour (#250). Emitted verbatim
   # by `phase_runner --propose design`; the owner's confirmation substitutes for the <owner> placeholder.
   checkpoints:
     - { from: init, to: design, gates: ['manifest-valid'], at: 2026-07-26, confirmed_by: danielPoloWork, gate_results: { manifest-valid: OK } }
     - { from: design, to: plan, gates: ['rfc-approved'], at: 2026-07-27, confirmed_by: danielPoloWork, gate_results: { rfc-approved: OK } }
+    - { from: plan, to: scaffold, gates: ['roadmap-covers-rfcs'], at: 2026-07-27, confirmed_by: danielPoloWork, gate_results: { roadmap-covers-rfcs: OK } }
   # ^ emitted verbatim by `phase_runner --propose plan --rfc docs/rfc/0001-core-contracts.md
   #   --expect-rev 1`; the owner's in-session confirmation substitutes for the <owner> placeholder.
   #   gate_results is EVIDENCE, not honour (#250): rfc-approved=OK was computed live by rfc_check
@@ -34,11 +37,20 @@ delivery_state:
   # contracts — the two-contracts rule (AGENTS.md §preamble). traceability.py matches only the
   # list values, never the comments, so the collision is cosmetic; it is spelled out so a reader
   # does not conflate them.
-  # `milestones` stays empty deliberately: the roadmap milestone ids arrive with ROADMAP.md, which
-  # the `plan` phase (producer) authors. The roadmap-covers-rfcs gate — which requires a milestone
-  # section to reference RFC-0001 by id — belongs to plan -> scaffold, not to this transition.
-  refs: { rfcs: ['RFC-0001'], milestones: [], prs: [1, 4], releases: [] }
-  # PR #1 = the bootstrap PR; PR #4 = the PR that landed RFC-0001 (both traceability edges)
+  # `milestones` are the ROADMAP.md milestone ids (`## Milestone N` sections), populated by the plan
+  # phase. These are ROADMAP ids, NOT GitHub milestone titles — the two are distinct and the repo has
+  # only one GitHub milestone (v0.1.0) against eight roadmap milestones. The traceability graph edge
+  # rfc -> milestone is derived from ROADMAP.md by traceability.covering_milestones (which returns
+  # bare numbers; doctor.py prefixes the M), so nothing parses the list below — it is the recorded
+  # cross-link, read by doctor.py for the status readout.
+  refs: { rfcs: ['RFC-0001'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7], releases: [] }
+  # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges).
+  # Coverage today is RFC-0001 -> M2 only. M1 is governed by ADR-001 + ADR-004 rather than an RFC
+  # (both Accepted — an RFC there would re-decide an accepted ADR); M3-M7 each open with an RFC item
+  # (3.0, 4.0, 5.0, 6.0, 7.0) that BLOCKS their implementation items, and M8 is plumbing for
+  # normatively-specified NFRs. So five RFCs are owed, and each is a legal `plan -> design` return
+  # (workflow.yaml makes that edge resumable and NOT human-gated). Recorded here so the gap is state,
+  # not folklore: `refs.rfcs` will grow to RFC-0002..0006 as those items land.
 
 identity:
   # Scope reconciled 2026-07-26: the maintainer confirmed `.spec/d4np-java.md` (reviewed draft
