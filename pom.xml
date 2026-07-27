@@ -141,34 +141,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${compiler.plugin.version}</version>
-          <configuration>
-            <!-- ErrorProne runs as a javac plugin, so it needs the compile policy below and the
-                 jdk.compiler exports in .mvn/jvm.config — javac's internals are encapsulated from
-                 JDK 16 on. NullAway is an ErrorProne check, hence the second processor path.
-
-                 ErrorProne's recommended "should stop at FLOW" flag is deliberately OMITTED: its
-                 spelling differs between JDK 17 and 21 (an -XD form vs a long-option form), and the
-                 CI matrix builds BOTH, so one spelling would break the other platform. It is an
-                 optimisation, not a requirement for correctness. (Note: a literal double hyphen
-                 cannot appear in an XML comment, which is why the flags are described, not quoted.) -->
-            <compilerArgs>
-              <arg>-XDcompilePolicy=simple</arg>
-              <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}</arg>
-            </compilerArgs>
-            <annotationProcessorPaths>
-              <path>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_core</artifactId>
-                <version>${errorprone.version}</version>
-              </path>
-              <path>
-                <groupId>com.uber.nullaway</groupId>
-                <artifactId>nullaway</artifactId>
-                <version>${nullaway.version}</version>
-              </path>
-            </annotationProcessorPaths>
-          </configuration>
-        </plugin>
+                </plugin>
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
@@ -233,4 +206,62 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!--
+      ErrorProne + NullAway run ONLY on JDK 21 and above, and that is forced rather than preferred.
+      CI proved both halves of it:
+
+        on Temurin 17 -> UnsupportedClassVersionError: ErrorProneJavacPlugin has class file version
+                         65.0 (Java 21) and a 17 runtime reads at most 61.0. ErrorProne 2.50.0
+                         simply cannot execute there.
+        on Temurin 21 -> "The default should-stop ifError policy (INIT) is not supported by Error
+                         Prone". The flag is a REQUIREMENT, not the optimisation an earlier revision
+                         of this POM assumed; ErrorProne refuses to start without it.
+
+      Confining it to a JDK 21 profile answers both: the 17 job compiles and tests cleanly against
+      the published baseline, and the flag is passed only where ErrorProne actually runs, so the
+      17-vs-21 spelling difference never arises.
+
+      Nothing is lost from the artifact by this. ErrorProne is static analysis, not output: every
+      module is still compiled with release 17 on every platform, and analysis findings surface on
+      the three JDK 21 jobs. Spec §1.1 asks for 17 as the baseline and 21 exercised in CI, which is
+      exactly what this preserves.
+    -->
+    <profile>
+      <id>errorprone</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <compilerArgs>
+                  <arg>-XDcompilePolicy=simple</arg>
+                  <arg>--should-stop=ifError=FLOW</arg>
+                  <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}</arg>
+                </compilerArgs>
+                <annotationProcessorPaths>
+                  <path>
+                    <groupId>com.google.errorprone</groupId>
+                    <artifactId>error_prone_core</artifactId>
+                    <version>${errorprone.version}</version>
+                  </path>
+                  <path>
+                    <groupId>com.uber.nullaway</groupId>
+                    <artifactId>nullaway</artifactId>
+                    <version>${nullaway.version}</version>
+                  </path>
+                </annotationProcessorPaths>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
 </project>
