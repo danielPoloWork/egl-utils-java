@@ -51,6 +51,21 @@
     <!-- Spec §1.1: JDK 17 is the published baseline; 21 is exercised in CI. `release` pins the
          bytecode + API level so building on 21 cannot leak a 21-only symbol into a 17 artifact. -->
     <maven.compiler.release>17</maven.compiler.release>
+    <!-- Pinned explicitly, not left to inherit: the bytecode smoke test asserts major version 61,
+         and that assertion is only sound if test classes are pinned to 17 as well. -->
+    <maven.compiler.testRelease>17</maven.compiler.testRelease>
+
+    <!-- Item 1.3. Versions resolved from Maven Central's latest STABLE release, never a milestone:
+         ordering by timestamp returns pre-releases (junit-bom 5.13.0-M3, assertj 4.0.0-M1,
+         surefire 3.6.0-M1 were all offered), and a library that promises binary compatibility
+         must not pin an -M/-RC build. -->
+    <junit.version>5.12.2</junit.version>
+    <assertj.version>3.27.3</assertj.version>
+    <!-- surefire MUST be pinned: Maven's default binding can be a 2.x surefire that does not know
+         the JUnit Platform, so JUnit 5 tests are SILENTLY NOT RUN and the build still passes. That
+         is the same vacuous-green class as the -Pjmh profile finding in item 1.2. -->
+    <surefire.version>3.5.6</surefire.version>
+    <compiler.plugin.version>3.15.0</compiler.plugin.version>
   </properties>
 
   <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
@@ -68,6 +83,19 @@
 
   <dependencyManagement>
     <dependencies>
+      <!-- The JUnit BOM governs every junit-* artifact from one version. -->
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
+      </dependency>
       <dependency><groupId>it.d4np</groupId><artifactId>d4np-core</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>it.d4np</groupId><artifactId>d4np-jdbc</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>it.d4np</groupId><artifactId>d4np-concurrent</artifactId><version>${project.version}</version></dependency>
@@ -78,4 +106,37 @@
       <dependency><groupId>it.d4np</groupId><artifactId>d4np-test</artifactId><version>${project.version}</version></dependency>
     </dependencies>
   </dependencyManagement>
+
+  <!-- TEST SCOPE ONLY, so this does not violate ADR-001's zero-third-party-dependency rule for
+       core: NFR-08 constrains compile/public surface, and test-scoped artifacts are not transitive
+       to consumers. Declared on the parent so every module inherits one consistent test stack. -->
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${compiler.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${surefire.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
