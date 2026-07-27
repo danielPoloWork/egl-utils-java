@@ -1,0 +1,34 @@
+# Auto-derived by tools/derive_links.py from merged PRs — do not hand-edit.
+links:
+  - pr: 9
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "19c2de2460dc85231962a372164191d3129adf02"
+  - pr: 8
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "9f43c971536264e9889db03024cf011c26b5f4da"
+  - pr: 7
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "a544b14de6167ef2e7e4cb121183561008447017"
+  - pr: 6
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "0eb928b7d663a78cac4281b32367987b777e532b"
+  - pr: 5
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "462ee7e77881c3e9b6d18c90f977426fc72e5625"
+  - pr: 4
+    rfc: "RFC-0001"
+    milestone: "v0.1.0"
+    commit: "a49e63ea8b0e20b66b325cf92b98f58111876535"
+  - pr: 2
+    rfc: null
+    milestone: "v0.1.0"
+    commit: "b2dde21de78d857f5cb50d9ae628a0c57bf5ca1b"
+  - pr: 1
+    rfc: null
+    milestone: "v0.1.0"
+    commit: "0ac1ecee785377be029e87ecbe63446db3db8ed2"
