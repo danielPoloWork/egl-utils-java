@@ -34,7 +34,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
-          cache: maven
+          cache: ${{ hashFiles('**/pom.xml') != '' && 'maven' || '' }}
 
       - name: Build (verify the tag builds clean)
         shell: bash
