@@ -68,7 +68,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
@@ -109,7 +109,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B spotless:check checkstyle:check
       - run: mvn -B verify -Pcoverage
@@ -121,7 +121,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B -Pjcstress verify
   compatibility:
@@ -131,7 +131,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B enforcer:enforce
       - run: mvn -B japicmp:cmp
@@ -142,7 +142,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B dependency-check:check
 
@@ -156,7 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
