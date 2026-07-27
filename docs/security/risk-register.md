@@ -57,6 +57,46 @@ R-01/R-02/R-03, which are live today.
 | **R-05** | **high** | `AuditLog` (FR-16) | **No redaction policy specified.** As written, `AuditLog` records before/after values of every state change | An audit store is typically retained longer and replicated wider than application logs. Faithfully recording secrets and PII into it converts a compliance feature into the project's widest data-leak surface — and under `posture: enterprise` this is exactly the control class the bar exists for | Field-level allowlisting, a `@Sensitive` opt-out, an explicit never-capture list — settled in **RFC-0002 before any code**, which is why item 3.0 blocks 3.3 | **3.0 → 3.3** |
 | **R-06** | **medium** | `JwtTokenProvider` (FR-11) · JWKS | **JWKS trust posture unspecified.** ADR-003 pins caching and rate-limited refresh but says nothing about TLS verification, certificate/key pinning, or an allowlist of permitted JWKS origins | If a JWKS URL is caller-configurable, an attacker who can influence it (SSRF, config injection, DNS) serves their own key document and every subsequent token verifies. Relying on the JDK default trust store is a reasonable floor but an unstated one — and "unstated" is what this audit exists to catch | Specify in **RFC-0005**: JWKS origin allowlist, explicit TLS posture, and whether the URL may come from caller config at all | **6.0 → 6.1** |
 
+### Remediation applied in this PR — R-02 closed, R-07 resolved with one residual
+
+R-07 degrades with time (any re-render reverts merged updates), so it was fixed rather than filed. The
+fix subsumes R-02, because porting the merged versions as **mutable tags** would have recreated the
+same drift on the next Dependabot run — a fix guaranteed to expire. They were ported as **SHA pins**
+instead.
+
+| Action | Before | After | Sites |
+|---|---|---|---|
+| `actions/setup-java` | `@v5` (tag) | `@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0` | 7 |
+| `actions/checkout` | `@v7` (tag) | `@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` | 9 |
+| `softprops/action-gh-release` | `@3bb12739… # v2.6.2` would have been re-rendered over the merged `v3.0.2` | `@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2` | 1 |
+
+SHAs were resolved from the GitHub refs API and cross-checked, not copied from a changelog: the
+`setup-java` `v5` major tag and the `v5.6.0` release tag point at the **same** commit today, so the pin
+is unambiguous. The `checkout` v7.0.1 SHA is deliberately **the same one the factory's own template
+pins**, which keeps the manifest-authored pins in lockstep with the template-provided ones and avoids
+introducing a second drift class between them.
+
+**Verification — the state that actually matters:**
+
+```
+grep -rE "uses: [^@]+@(v[0-9]|main|master)" .github/workflows/   -> no matches
+diff <on-disk workflows> <fresh render from the manifest>        -> IN LOCKSTEP, both files
+pin inventory: 9 checkout · 7 setup-java · 1 setup-python · 1 action-gh-release  = 18, all SHA
+ci.yml: 8 jobs, 6 gated on bootstrap (guard intact); release.yml: draft-release
+```
+
+**Residual — stated, not buried.** The `action-gh-release` pin is **hardcoded** in
+`.eados-core/templates/.github/workflows/release.yml.tmpl:39` with no placeholder, so the manifest has
+no hook for it. Fixing the cause therefore meant patching the **vendored template** — and
+`.gitignore:65` ignores `/.eados-core/`, so **that patch is local-only and is not in this PR**. The
+rendered `release.yml` committed here is correct, but anyone re-rendering from a clean bundle gets
+`v2.6.2` back. The durable fix is upstream bumping the template pin; upstream v2.12.0 still ships
+`v2.6.2`. This is the same root cause as [pgs-eados#350](https://github.com/danielPoloWork/pgs-eados/issues/350),
+and the reason its recommendation matters beyond tidiness.
+
+So: **R-02 → closed.** **R-07 → resolved for the 17 manifest-controlled references, residual on 1
+template-controlled reference that a consumer repo cannot durably fix.**
+
 ### Positive controls — verified, not assumed
 
 Recorded because an audit that lists only problems misrepresents the posture:
@@ -95,5 +135,5 @@ R-02 has a scheduled owner (8.5). R-05 and R-06 are correctly sequenced behind t
 the roadmap already blocks the implementing items on them, which is the contract-first ordering
 working as intended. **R-04 needs a decision**, not a fix, and it blocks `audit → migrate`.
 
-Four findings — R-01, R-03, R-04, R-07 — have **no roadmap item** (R-07 maps to 8.5 but must not wait for M8). They are recorded here, but a register
+Three findings — R-01, R-03, R-04 — have **no roadmap item** (R-07 was fixed in this PR rather than scheduled; R-02 closed with it). They are recorded here, but a register
 entry is not a plan; they need items or owner action to become tracked work.
