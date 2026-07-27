@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Parent POM for egl-utils-java — the nine-module reactor of ADR-001, established by ROADMAP
+  item 1.1 and made normative by docs/adr/0003-maven-reactor-layout.md (supersedes ADR-0002).
+
+  SCOPE OF ITEM 1.1: structure only. Plugin configuration (Spotless, ErrorProne, NullAway,
+  Checkstyle) is item 1.4; maven-enforcer's banned-dependency rules are item 1.7; JaCoCo/PIT
+  gates are item 8.2; japicmp is item 8.1. Third-party dependency versions arrive with the
+  module that needs them, so dependencyManagement below pins ONLY the internal modules — a
+  version pinned before a module uses it is speculation, and enforcer convergence (1.7) is
+  what will police the rest.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>it.d4np</groupId>
+  <artifactId>d4np-parent</artifactId>
+  <version>0.0.0</version>
+  <packaging>pom</packaging>
+
+  <name>egl-utils-java (parent)</name>
+  <description>Java Enterprise Architecture Library — a modular set of libraries implementing enterprise design patterns for Spring Boot and Jakarta EE systems.</description>
+  <url>https://github.com/danielPoloWork/egl-utils-java</url>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>danielPoloWork</id>
+      <name>Daniel Polo</name>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/danielPoloWork/egl-utils-java.git</connection>
+    <developerConnection>scm:git:git@github.com:danielPoloWork/egl-utils-java.git</developerConnection>
+    <url>https://github.com/danielPoloWork/egl-utils-java</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Spec §1.1: JDK 17 is the published baseline; 21 is exercised in CI. `release` pins the
+         bytecode + API level so building on 21 cannot leak a 21-only symbol into a 17 artifact. -->
+    <maven.compiler.release>17</maven.compiler.release>
+  </properties>
+
+  <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
+  <modules>
+    <module>d4np-core</module>
+    <module>d4np-jdbc</module>
+    <module>d4np-concurrent</module>
+    <module>d4np-security</module>
+    <module>d4np-json</module>
+    <module>d4np-spring-adapter</module>
+    <module>d4np-lock-redisson</module>
+    <module>d4np-test</module>
+    <module>d4np-bom</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-core</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-jdbc</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-concurrent</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-security</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-json</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-spring-adapter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-lock-redisson</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>it.d4np</groupId><artifactId>d4np-test</artifactId><version>${project.version}</version></dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

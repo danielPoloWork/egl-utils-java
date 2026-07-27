@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  d4np-bom — the CONSUMER-FACING versioning contract (ADR-001, NFR-09).
+
+  This is the single artifact a consumer imports to pin the family; individual module versions are
+  then omitted from their POMs. It deliberately declares every publishable module, including
+  d4np-test, so a consumer can pin the test helpers without guessing a version.
+
+  It carries NO parent: a BOM that inherits the reactor parent would drag the parent's build
+  configuration into every consumer's dependencyManagement resolution. The version is therefore
+  stated literally and moves with the reactor's release.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>it.d4np</groupId>
+  <artifactId>d4np-bom</artifactId>
+  <version>0.0.0</version>
+  <packaging>pom</packaging>
+
+  <name>BOM</name>
+  <description>Bill of materials for the d4np family — the versioning contract consumers pin.</description>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-jdbc</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-concurrent</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-security</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-json</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-spring-adapter</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-lock-redisson</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>it.d4np</groupId>
+        <artifactId>d4np-test</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

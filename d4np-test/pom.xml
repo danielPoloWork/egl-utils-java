@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- d4np-test -> d4np-core
+     ADR-001 rule: arrows point toward core only, no cycles. Third-party dependencies arrive with
+     the milestone item that needs them; maven-enforcer (item 1.7) will police the bans. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>it.d4np</groupId>
+    <artifactId>d4np-parent</artifactId>
+    <version>0.0.0</version>
+  </parent>
+
+  <artifactId>d4np-test</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Test support</name>
+  <description>Test-scoped helpers. Production code importing this module fails the CI dependency check (FR-25).</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>it.d4np</groupId>
+      <artifactId>d4np-core</artifactId>
+    </dependency>
+  </dependencies>
+</project>
