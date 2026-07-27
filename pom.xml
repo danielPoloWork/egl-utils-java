@@ -243,6 +243,10 @@
                 <compilerArgs>
                   <arg>-XDcompilePolicy=simple</arg>
                   <arg>--should-stop=ifError=FLOW</arg>
+                  <!-- Both flags below are demanded by ErrorProne itself on JDK 21; it aborts with
+                       an explicit message naming each one rather than misbehaving quietly, which is
+                       how they were discovered. -->
+                  <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
                   <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=${nullaway.annotated.packages}</arg>
                 </compilerArgs>
                 <annotationProcessorPaths>
