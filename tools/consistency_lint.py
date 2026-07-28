@@ -36,6 +36,7 @@ import os
 import re
 import subprocess
 import sys
+import xml.etree.ElementTree as ET  # jpms-congruence reads the reactor POMs
 
 # ---------------------------------------------------------------------------
 # CONFIG — filled by EADOS at generation time from orchestrator/project.yaml.
@@ -397,6 +398,128 @@ def check_posture():
                    "enterprise governance posture — the register has no posture to serve")
 
 
+# ---------------------------------------------------------------------------
+# 9. JPMS congruence (ITEM 1.6)
+# ---------------------------------------------------------------------------
+# The module descriptors and the POMs state the SAME dependency graph — ADR-001 / spec §3 — in two
+# languages. Nothing else compares them: Maven resolves `<dependency>`, javac resolves `requires`,
+# and a module that declares one without the other still compiles today. It breaks later, in the
+# module that finally writes an import, which is the worst possible moment to discover it.
+#
+# So this check derives artifact -> module-name from the module-info files THEMSELVES rather than
+# hardcoding a list of names. A hardcoded list would be a third statement of the same fact and would
+# drift in its turn; deriving it means a module can be renamed in one place and the graph is still
+# verified. What is asserted is the shape, not the names:
+#
+#   * every jar module in the reactor has a module-info.java (the BOM must NOT have one)
+#   * module names are unique and live under the it.d4np.utils family root (ADR-0005)
+#   * the INTERNAL `requires` edges equal the internal `<dependency>` entries, exactly
+#
+# Only internal (it.d4np) edges are compared. Third-party artifacts have no mechanically derivable
+# module name (jackson-databind -> com.fasterxml.jackson.databind), so demanding a match there would
+# invent failures the moment a real dependency lands.
+_FAMILY_ROOT = "it.d4np.utils"
+
+
+def _strip_java_comments(text):
+    """Remove block and line comments before the graph is parsed out.
+
+    No current descriptor needs this — verified, not assumed. It guards a hazard the descriptors'
+    own house style invites: they discuss future clauses in prose, and one line of Javadoc reading
+    `{@code requires java.sql;}` parses as a real edge against the raw text, so the lint would
+    compare a graph nobody wrote and fail on a comment. Cheap here, confusing to diagnose later.
+    """
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
+    return re.sub(r"//[^\n]*", "", text)
+
+
+def check_jpms():
+    name = "jpms-congruence"
+    parent = os.path.join(ROOT, "pom.xml")
+    if not os.path.exists(parent):
+        return  # no reactor yet; item 1.1 owns that
+    ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+    modules = [
+        el.text.strip()
+        for el in ET.parse(parent).getroot().findall("m:modules/m:module", ns)
+    ]
+    if not modules:
+        fail(name, "the parent pom.xml declares no <modules>")
+        return
+
+    declared = {}  # artifactId -> module name
+    internal_deps = {}  # artifactId -> set of internal artifactIds
+    for mod in modules:
+        pom = os.path.join(ROOT, mod, "pom.xml")
+        if not os.path.exists(pom):
+            fail(name, f"reactor module {mod} has no pom.xml")
+            continue
+        root = ET.parse(pom).getroot()
+        artifact = (root.findtext("m:artifactId", namespaces=ns) or mod).strip()
+        packaging = (root.findtext("m:packaging", default="jar", namespaces=ns)).strip()
+        mi = os.path.join(ROOT, mod, "src", "main", "java", "module-info.java")
+
+        if packaging == "pom":
+            # The BOM: no sources, so a descriptor is impossible, not merely unnecessary.
+            if os.path.exists(mi):
+                fail(name, f"{mod} is packaging=pom yet ships {mod}/src/main/java/module-info.java")
+            continue
+
+        if not os.path.exists(mi):
+            fail(name, f"{mod} is packaging={packaging} but has no src/main/java/module-info.java "
+                       f"(spec §1.1: every module ships module-info)")
+            continue
+
+        body = _strip_java_comments(
+            open(mi, encoding="utf-8").read()  # noqa: SIM115 - short-lived, read once
+        )
+        nm = re.search(r"\bmodule\s+([\w.]+)\s*\{", body)
+        if nm is None:
+            fail(name, f"{mod}/src/main/java/module-info.java declares no module name")
+            continue
+        module_name = nm.group(1)
+        if module_name != _FAMILY_ROOT and not module_name.startswith(_FAMILY_ROOT + "."):
+            fail(name, f"{mod} declares module `{module_name}`, which is outside the "
+                       f"`{_FAMILY_ROOT}` family root (ADR-0005)")
+        declared[artifact] = module_name
+
+        requires = set(
+            re.findall(r"\brequires\s+(?:(?:static|transitive)\s+)*([\w.]+)\s*;", body)
+        )
+        internal_deps[artifact] = {
+            (d.findtext("m:artifactId", namespaces=ns) or "").strip()
+            for d in root.findall("m:dependencies/m:dependency", ns)
+            if (d.findtext("m:groupId", namespaces=ns) or "").strip() == "it.d4np"
+        }
+        # Stash the raw requires for the second pass, once every name is known.
+        internal_deps[artifact] = (internal_deps[artifact], requires)
+
+    dupes = {n for n in declared.values() if list(declared.values()).count(n) > 1}
+    if dupes:
+        fail(name, f"duplicate module name(s) across modules: {sorted(dupes)}")
+
+    for artifact, (dep_artifacts, requires) in sorted(internal_deps.items()):
+        expected = set()
+        for dep in sorted(dep_artifacts):
+            if dep not in declared:
+                fail(name, f"{artifact} depends on it.d4np:{dep}, which declares no module name "
+                           f"(is it packaging=pom, or missing a module-info.java?)")
+                continue
+            expected.add(declared[dep])
+        actual_internal = {
+            r for r in requires if r == _FAMILY_ROOT or r.startswith(_FAMILY_ROOT + ".")
+        }
+        if actual_internal != expected:
+            missing = sorted(expected - actual_internal)
+            extra = sorted(actual_internal - expected)
+            detail = []
+            if missing:
+                detail.append(f"POM declares a dependency with no `requires`: {missing}")
+            if extra:
+                detail.append(f"`requires` with no POM dependency: {extra}")
+            fail(name, f"{artifact}: module-info and pom.xml disagree — " + "; ".join(detail))
+
+
 CHECKS = [
     check_version_lockstep,
     check_adr_index,
@@ -406,6 +529,7 @@ CHECKS = [
     check_bugs,
     check_i18n_freshness,
     check_posture,
+    check_jpms,
 ]
 
 
