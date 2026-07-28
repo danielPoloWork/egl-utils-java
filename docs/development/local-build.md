@@ -53,6 +53,34 @@ it by full coordinates. Excluding the module is also the semantically correct an
 Checkstyle needs no exclusion: `maven-checkstyle-plugin` is in the default pluginGroup
 `org.apache.maven.plugins`, so its goal prefix resolves without inheritance.
 
+## JPMS: every code module ships a `module-info.java`
+
+Eight modules carry a descriptor; `d4np-bom` cannot (no sources). `d4np-core` owns the family root
+`it.d4np.utils`, so **only core may put a type there** — two modules sharing one package is a split
+package and the module system rejects it outright. Capability modules use `it.d4np.utils.<capability>`.
+Names and the full graph: [ADR-0005](../adr/0005-jpms-module-names-and-export-less-descriptors.md).
+
+Three things to know before editing one:
+
+- **`requires` must mirror the POM.** `consistency_lint.py`'s `jpms-congruence` check compares the
+  internal `requires` edges against the module's internal `<dependency>` entries and fails on any
+  disagreement — so add both, or neither.
+- **You cannot `exports` a package that has no class in it.** `javac` rejects it with *"package is
+  empty or does not exist"*; `exports` is not a forward declaration, and a lone `package-info.java`
+  does **not** satisfy it. Add the `exports` clause in the same change as the first type.
+- **Checkstyle never sees these files.** Checkstyle 10.26.1 cannot parse a module declaration, so
+  `**/module-info.java` is excluded in the parent POM. Spotless *does* format them.
+
+Inspect what actually got built — the descriptor in the JAR, not the source:
+
+```bash
+# Separator is ':' on Linux/macOS and ';' on Windows — the module path is not a shell path.
+MP="$(ls d4np-*/target/*.jar | paste -sd:)"
+java --module-path "$MP" --describe-module it.d4np.utils.spring
+# Resolve the whole graph at once; a broken `requires` fails here with FindException.
+java --module-path "$MP" --add-modules ALL-MODULE-PATH -version
+```
+
 ## Line endings are declared, not inherited
 
 A root `.gitattributes` normalises text files to **LF**. Do not delete it and do not "fix" your line

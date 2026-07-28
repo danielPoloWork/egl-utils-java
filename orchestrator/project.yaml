@@ -87,9 +87,17 @@ identity:
                                                        # "src/main/java/it/d4np/utils" — PLURAL. The prior value
                                                        # "util" (singular) was recorded from an earlier reading of
                                                        # the requested path and was wrong. Read `utils` as the
-                                                       # FAMILY name, not a description of contents — modules land
-                                                       # at it.d4np.utils.core, .jdbc, .security, … (the
-                                                       # commons-lang3 convention). Load-bearing: this slug derives
+                                                       # FAMILY name, not a description of contents.
+                                                       # CORRECTED AGAIN 2026-07-28 (item 1.6 / ADR-0005): this note
+                                                       # previously read "modules land at it.d4np.utils.core, .jdbc,
+                                                       # .security", which contradicted AGENTS.md §5 and the
+                                                       # ADR-0003 note — both of which put CORE's own sources at
+                                                       # it/d4np/utils/. The maintainer settled it: d4np-core OWNS
+                                                       # the family root `it.d4np.utils`, and only the capability
+                                                       # modules take a child of it (.jdbc, .security, …). A JPMS
+                                                       # module name is a binary contract, so the disagreement was
+                                                       # resolved before any module-info was written rather than
+                                                       # after consumers depended on it. Load-bearing: this slug derives
                                                        # src_main/src_test/src_bench, the namespace, the import
                                                        # hint, and the spec filename docs/specs/01_spec_<slug>.md,
                                                        # so it must be corrected HERE and re-rendered — editing the

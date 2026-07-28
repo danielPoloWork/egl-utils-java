@@ -168,6 +168,18 @@
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <violationSeverity>error</violationSeverity>
+            <!-- Checkstyle 10.26.1 CANNOT PARSE a module declaration. Item 1.6 verified this is a
+                 tool limitation and not a misconfiguration here: the pin is effective (the debug
+                 log resolves checkstyle-10.26.1.jar), and the failure reproduces with a minimal
+                 config of TreeWalker + AvoidStarImport on a bare `module m {}` —
+                   IllegalStateException ... 1:0: no viable alternative at input 'module'
+                 It is a hard failure of the whole goal, not a violation, so one module-info.java
+                 would take the entire lint down. Excluding them costs nothing real: every rule in
+                 checkstyle.xml is about naming, imports, structure or Javadoc of TYPE declarations,
+                 and a module descriptor declares no types and has no imports (`requires` is not an
+                 import, so IllegalImport could not police it either). Spotless DOES parse module
+                 declarations, so formatting stays governed. -->
+            <excludes>**/module-info.java</excludes>
           </configuration>
           <dependencies>
             <!-- Pin Checkstyle itself: the plugin ships an older engine, and the config above uses
