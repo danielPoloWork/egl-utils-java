@@ -1,7 +1,12 @@
 # Local Build & Test
 
 How to build, test, and check `egl-utils-java` on your machine. CI runs the same commands
-on Linux / Windows / macOS on Temurin JDK 17 & 21; reproducing them locally avoids a red round-trip.
+on Linux / Windows / macOS on Temurin JDK 17 & 21 — **six matrix cells, all three platforms on both
+toolchains** (item 1.5) — so reproducing them locally avoids a red round-trip.
+
+Format and lint additionally run on a two-platform `format-lint` matrix (Linux + Windows). That is not
+redundancy: see [ADR-0004](../adr/0004-declare-line-endings-and-cross-platform-format-checks.md) — a
+formatting verdict can differ by platform, and it did.
 
 ## Prerequisites
 
@@ -47,6 +52,16 @@ it by full coordinates. Excluding the module is also the semantically correct an
 
 Checkstyle needs no exclusion: `maven-checkstyle-plugin` is in the default pluginGroup
 `org.apache.maven.plugins`, so its goal prefix resolves without inheritance.
+
+## Line endings are declared, not inherited
+
+A root `.gitattributes` normalises text files to **LF**. Do not delete it and do not "fix" your line
+endings locally: without it, Spotless falls back to the platform's native ending (it reads
+`GIT_ATTRIBUTES` by default), and on Windows `spotless:check` then reports **every line** of a file as
+a violation while the same commit passes on Linux. Details and the rejected alternatives are in
+[ADR-0004](../adr/0004-declare-line-endings-and-cross-platform-format-checks.md).
+
+If your working tree predates that file, `git add --renormalize .` is the one-time correction.
 
 ## A warning about `.mvn/jvm.config`
 
