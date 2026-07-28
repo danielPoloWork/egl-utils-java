@@ -66,6 +66,17 @@
          is the same vacuous-green class as the -Pjmh profile finding in item 1.2. -->
     <surefire.version>3.5.6</surefire.version>
     <compiler.plugin.version>3.15.0</compiler.plugin.version>
+
+    <!-- Item 1.4 — quality toolchain. Latest STABLE, pre-releases filtered out. -->
+    <spotless.plugin.version>2.44.5</spotless.plugin.version>
+    <google.java.format.version>1.27.0</google.java.format.version>
+    <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+    <checkstyle.version>10.26.1</checkstyle.version>
+    <!-- ErrorProne + NullAway are NOT configured here — see ROADMAP item 1.11. They need three
+         JDK-21-specific javac flags and a compatible ErrorProne/NullAway version pair, and the
+         latest stable of each (2.50.0 / 0.12.7) does not interoperate. Keeping them out leaves the
+         build matrix green instead of trading four passing jobs for a static-analysis tool that is
+         not yet wired. -->
   </properties>
 
   <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
@@ -130,6 +141,43 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${compiler.plugin.version}</version>
+                </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.plugin.version}</version>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <version>${google.java.format.version}</version>
+              </googleJavaFormat>
+              <removeUnusedImports/>
+              <importOrder/>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </java>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>${checkstyle.plugin.version}</version>
+          <configuration>
+            <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <consoleOutput>true</consoleOutput>
+            <failsOnError>true</failsOnError>
+            <violationSeverity>error</violationSeverity>
+          </configuration>
+          <dependencies>
+            <!-- Pin Checkstyle itself: the plugin ships an older engine, and the config above uses
+                 rules whose behaviour changed across engine versions. -->
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>${checkstyle.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -138,5 +186,25 @@
         </plugin>
       </plugins>
     </pluginManagement>
+
+    <!-- Declared here, NOT only in pluginManagement: Maven resolves a goal prefix such as
+         `spotless:check` from <build><plugins> and the default pluginGroups
+         (org.apache.maven.plugins, org.codehaus.mojo). com.diffplug.spotless is in neither, so a
+         management-only entry produces exactly the "No plugin found for prefix 'spotless'" failure
+         the quality job already reported. Versions and configuration stay in pluginManagement above.
+
+         No <executions> are bound on purpose: `mvn clean verify` stays a compile+test cycle, and the
+         quality job invokes these goals explicitly, which is how ci.extra_jobs is written. -->
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+    </plugins>
   </build>
+
 </project>

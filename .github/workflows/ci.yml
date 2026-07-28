@@ -111,7 +111,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with: { distribution: temurin, java-version: '21', cache: maven }
-      - run: mvn -B spotless:check checkstyle:check
+      # Spotless and Checkstyle are two commands, not one, because their module scope differs.
+      #
+      # d4np-bom deliberately carries NO parent (ADR-001/NFR-09: a BOM must not push the reactor's
+      # build configuration into a consumer's resolution), so it cannot inherit the Spotless plugin
+      # declaration — and Spotless refuses to run on a project that does not declare it, even when
+      # invoked by full coordinates. Excluding it is also semantically right: the BOM has no `src`
+      # tree, so a Java formatter has nothing to format there.
+      #
+      # Checkstyle needs no exclusion: maven-checkstyle-plugin lives in the default pluginGroup
+      # org.apache.maven.plugins, so its prefix resolves without inheritance, and it is clean on
+      # all ten modules.
+      - run: mvn -B spotless:check -pl '!d4np-bom'
+      - run: mvn -B checkstyle:check
+      # NOTE: -Pcoverage and -Pmutation do not exist yet; Maven only WARNS on an unmatched profile,
+      # so these two steps pass having measured nothing. ROADMAP item 8.2 owns declaring them.
       - run: mvn -B verify -Pcoverage
       - run: mvn -B -Pmutation test
   jcstress:
