@@ -1,0 +1,50 @@
+# Line-ending policy for egl-utils-java — added by ROADMAP item 1.5.
+#
+# WHY THIS FILE EXISTS. Without it, line endings are a property of each developer's git config
+# rather than of the repository, and the toolchain disagrees across platforms:
+#
+#   Spotless resolves its `lineEndings` from GIT_ATTRIBUTES by default. With no .gitattributes to
+#   read it falls back to the PLATFORM's native ending, so on Windows it expects CRLF — while
+#   `core.autocrlf=input` had written LF to the working tree. Every line of a file then counts as a
+#   format violation: `spotless:check` reported all 77 lines of BuildContractSmokeTest.java as
+#   violating on Windows while passing on Linux. Item 1.5's cross-platform format-lint job caught
+#   it; before that job existed, format checks only ever ran on Linux, where the accident is benign.
+#
+# Declaring LF explicitly makes the answer identical for git, Spotless, Checkstyle's
+# NewlineAtEndOfFile, and every contributor's editor — regardless of their core.autocrlf setting.
+
+# Default: treat as text, normalise to LF in the repository AND in the working tree.
+* text=auto eol=lf
+
+# Java and build/config sources — LF, stated explicitly rather than relying on the default above.
+*.java     text eol=lf
+*.xml      text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.md       text eol=lf
+*.properties text eol=lf
+*.json     text eol=lf
+*.py       text eol=lf
+*.sh       text eol=lf
+.gitignore   text eol=lf
+.gitattributes text eol=lf
+# .mvn/jvm.config is read line-by-line by the Maven launcher script; keep it LF like every other
+# text file, and see .mvn/README.md for the rest of that file's constraints.
+jvm.config text eol=lf
+
+# Windows-only scripts genuinely require CRLF — cmd.exe mis-parses LF-terminated batch files.
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+
+# Binaries: never touched, never diffed as text.
+*.jar      binary
+*.zip      binary
+*.gz       binary
+*.class    binary
+*.png      binary
+*.jpg      binary
+*.gif      binary
+*.ico      binary
+*.pdf      binary
+*.gpg      binary
+*.keystore binary

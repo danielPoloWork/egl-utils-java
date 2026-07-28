@@ -19,3 +19,4 @@ Status transitions: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `D
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
 | [0002](0002-adopt-cross-language-source-layout.md) | Adopt the cross-language source layout | Superseded by ADR-0003 |
 | [0003](0003-maven-reactor-layout.md) | Adopt the Maven reactor layout, superseding the flat source tree | Accepted |
+| [0004](0004-declare-line-endings-and-cross-platform-format-checks.md) | Declare line endings in `.gitattributes`, and run format checks on more than one platform | Accepted |

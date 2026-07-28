@@ -188,18 +188,37 @@ toolchain:                   # Phase 3. Profile defaults from profiles/java.yaml
   commands:                  # Maven equivalents of the profile's ./gradlew commands
     build:        "mvn -B clean verify"
     test:         "mvn -B test"
-    format_check: "mvn -B spotless:check"
-    lint:         "mvn -B checkstyle:check"   # ErrorProne/NullAway bind into compilation, so they
-                                              # also run as part of `build`
+    # The -pl exclusion is REQUIRED, not a preference: d4np-bom deliberately carries no parent
+    # (ADR-001/NFR-09), so it cannot inherit the Spotless plugin declaration, and Spotless refuses
+    # a project that does not declare it — by prefix OR by full coordinates. Item 1.4 fixed this in
+    # the RENDERED ci.yml but not here, so a re-render silently reverted it; 1.5 syncs the source.
+    format_check: "mvn -B spotless:check -pl '!d4np-bom'"
+    lint:         "mvn -B checkstyle:check"   # ErrorProne/NullAway will bind into compilation once
+                                              # item 1.11 wires them, so they will also run as part
+                                              # of `build`; checkstyle needs no -pl exclusion, being
+                                              # in the default pluginGroup org.apache.maven.plugins
     bench:        "mvn -B -Pjmh verify"       # JMH harnesses under bench/ (capabilities.bench)
 
 ci:                          # Profile matrix, re-pointed from Gradle to Maven caching.
   tier1_platforms: "Linux / Windows / macOS on Temurin JDK 17 & 21"
+  # Item 1.5 completed this matrix to SIX cells. It carried four, which did not match this block's
+  # own `tier1_platforms` above ("Linux / Windows / macOS on Temurin JDK 17 & 21"): Windows and
+  # macOS were tested on 21 only. That gap mattered specifically because 17 is the PUBLISHED
+  # baseline (spec §1.1, NFR-07) — the untested toolchain was the one consumers actually get, on
+  # two of the three platforms. Nothing recorded that as a decision; the profile default simply
+  # went unexamined, so 1.5 closes it rather than amending the contract to match the matrix.
   matrix:
     - { os: ubuntu-24.04, toolchain: "temurin-17", preset: test }
     - { os: ubuntu-24.04, toolchain: "temurin-21", preset: test }
+    - { os: windows-2022, toolchain: "temurin-17", preset: test }
     - { os: windows-2022, toolchain: "temurin-21", preset: test }
+    - { os: macos-14,     toolchain: "temurin-17", preset: test }
     - { os: macos-14,     toolchain: "temurin-21", preset: test }
+  # COST, stated rather than hidden: macOS runners bill at a higher multiplier than Linux, so the
+  # sixth cell is the expensive one. It is included because `tier1_platforms` is a published
+  # compatibility claim and an untested claim is worth less than an absent one. Trimming the matrix
+  # is a legitimate maintainer call — but then `tier1_platforms` and spec §1.1 must be trimmed with
+  # it, in the same commit, so the contract never over-promises what CI actually exercises.
   # NOTE deliberately NOT added: Temurin 25. JDK 25 is the current LTS and testing it would be
   # additive (the published baseline stays 17), but spec §1.1 names "17 baseline, 21 tested in CI"
   # as the compatibility contract. Amending that contract is the maintainer's call, not a silent
@@ -237,9 +256,51 @@ ci:                          # Profile matrix, re-pointed from Gradle to Maven c
         - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
           with: { distribution: temurin, java-version: '21', cache: maven }
-        - run: mvn -B spotless:check checkstyle:check
+        # Two commands, not one, because their module scope differs — see commands.format_check.
+        - run: mvn -B spotless:check -pl '!d4np-bom'
+        - run: mvn -B checkstyle:check
+        # NOTE: -Pcoverage and -Pmutation do not exist yet; Maven only WARNS on an unmatched
+        # profile, so these two steps pass having measured nothing. ROADMAP item 8.2 owns them.
         - run: mvn -B verify -Pcoverage
         - run: mvn -B -Pmutation test
+    # Item 1.5. The rendered `build` matrix runs only build + test (that is the template's shape,
+    # and .eados-core/ is upstream tooling this project does not edit), but item 1.5 asks the matrix
+    # to cover format + lint too. This job supplies that half as project-owned data.
+    #
+    # WHY IT IS WORTH RUNNING MORE THAN ONCE: formatting is not as platform-independent as it looks.
+    # Spotless defaults to lineEndings=GIT_ATTRIBUTES and this repo has NO .gitattributes, so the
+    # line endings Spotless sees come from git's checkout behaviour — which differs on Windows.
+    # A formatting rule that passes on Linux and fails on Windows is exactly the class of defect a
+    # single-platform format job cannot see.
+    #
+    # ubuntu + windows, NOT macOS: the divergence being hunted is CRLF-vs-LF and path separators, so
+    # Windows is the informative case while macOS and Linux are both POSIX/LF. Adding macOS here
+    # would bill the highest-multiplier runner for a duplicate of the Linux answer.
+    #
+    # JDK 21 only: google-java-format and Checkstyle are libraries whose verdicts do not depend on
+    # the JDK running them, so a second toolchain here would cost twice and prove nothing.
+    format-lint:
+      name: format-lint / ${{ matrix.os }}
+      runs-on: ${{ matrix.os }}
+      needs: bootstrap
+      if: needs.bootstrap.outputs.ready == 'true'
+      timeout-minutes: 20
+      strategy:
+        fail-fast: false
+        matrix:
+          os: [ubuntu-24.04, windows-2022]
+      steps:
+        - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+          with: { distribution: temurin, java-version: '21', cache: maven }
+        # shell: bash on both platforms so the '!d4np-bom' quoting has one meaning: PowerShell would
+        # not treat these single quotes the same way, and cmd would pass them through literally.
+        - name: Format check
+          shell: bash
+          run: mvn -B spotless:check -pl '!d4np-bom'
+        - name: Lint
+          shell: bash
+          run: mvn -B checkstyle:check
     jcstress:
       name: jcstress / concurrency stress
       runs-on: ubuntu-24.04
