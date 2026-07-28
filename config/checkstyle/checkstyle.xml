@@ -80,7 +80,11 @@
     <module name="SimplifyBooleanExpression"/>
     <module name="SimplifyBooleanReturn"/>
     <module name="EmptyStatement"/>
-    <module name="IllegalThrow"/>
+    <!-- Named IllegalThrowS: the singular spelling is not a Checkstyle module, and the engine
+         rejects the whole configuration rather than skipping an unknown module. Bans throwing the
+         unactionable supertypes (Error, RuntimeException, Throwable) — FR-11/FR-12 need callers to
+         be able to distinguish failures. -->
+    <module name="IllegalThrows"/>
     <!-- FR-12/FR-11 hygiene: a caught-and-dropped exception is how crypto and JWT failures become
          silent. An empty catch must be justified by a comment. -->
     <module name="EmptyCatchBlock">

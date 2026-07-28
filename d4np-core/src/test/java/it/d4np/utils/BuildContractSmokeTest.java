@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
  *
  * <ul>
  *   <li>if {@code maven-surefire-plugin} is not pinned to a JUnit-Platform-aware version, this
- *       class is never discovered and the build still passes — so the existence of a
- *       {@code Tests run: 3} line in the build log is itself part of the contract;
+ *       class is never discovered and the build still passes — so a build log that reports three
+ *       tests run is itself part of the contract;
  *   <li>if {@code maven.compiler.release} stops taking effect, the bytecode check catches it before
  *       a 17-incompatible symbol reaches a published artifact (NFR-07);
  *   <li>if the module's package root ever drifts from {@code it.d4np.utils}, the first assertion

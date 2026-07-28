@@ -5,13 +5,21 @@
 #   2. JetBrains module files and compiled classes added (this repo is developed in IntelliJ).
 #   3. Gradle/Cargo/node entries retained from the template even though this build is Maven —
 #      they are harmless and keeping the template's shape makes future re-sync trivial.
+#
+# NOTE ON COMMENT PLACEMENT: a `#` only opens a comment at the START of a line. Trailing text after
+# a pattern becomes part of the pattern, so `target/  # per-module output` silently matches nothing.
+# All three deviations above were originally written that way and none of them worked; the first
+# local `mvn verify` (item 1.4) surfaced nine untracked target/ directories. Annotations therefore
+# go on their own line ABOVE the pattern they describe.
 
 # Build outputs
 /build/
 /dist/
 /out/
-target/          # [EGL] unanchored: per-module output in the Maven reactor
-*.class          # [EGL] Java bytecode
+# [EGL] unanchored: per-module output in the Maven reactor
+target/
+# [EGL] Java bytecode
+*.class
 *.o
 *.obj
 *.exe
@@ -41,7 +49,8 @@ htmlcov/
 
 # IDE / editor
 /.idea/
-*.iml            # [EGL] JetBrains module files
+# [EGL] JetBrains module files
+*.iml
 /.vscode/
 *.swp
 .DS_Store
