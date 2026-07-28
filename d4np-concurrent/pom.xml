@@ -25,4 +25,42 @@
       <artifactId>d4np-core</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001: spec §3 says "no third-party deps" for this module, so the allowlist is
+       internal modules plus test scope. Default-deny.
+
+       This rule is load-bearing for the family's shape, not just for this module: `DistributedLock`
+       is an INTERFACE here and Redisson implements it in d4np-lock-redisson. The moment Redisson
+       could be added here, that separation would be a convention instead of a structure — so this
+       is the rule that keeps d4np-lock-redisson worth existing. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>it.d4np:*</include>
+                    <include>*:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

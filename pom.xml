@@ -77,6 +77,9 @@
          latest stable of each (2.50.0 / 0.12.7) does not interoperate. Keeping them out leaves the
          build matrix green instead of trading four passing jobs for a static-analysis tool that is
          not yet wired. -->
+
+    <!-- Item 1.7 — the ADR-001 dependency policy as a build gate (NFR-08). Latest stable. -->
+    <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
   </properties>
 
   <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
@@ -196,6 +199,80 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire.version}</version>
         </plugin>
+        <!-- ITEM 1.7 — maven-enforcer. These are the rules that hold for EVERY module. The
+             framework-isolation half of ADR-001 is necessarily per-module (core may not see Jackson;
+             d4np-json exists in order to see it), so each module declares its own
+             `enforce-adr-001` execution. See docs/adr/0006 for why the split is that way round. -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>${enforcer.plugin.version}</version>
+          <configuration>
+            <rules>
+              <!-- Spec §1.1 / NFR-07: 17 is the published baseline. Not an upper bound — 21 is
+                   exercised in CI and must keep working. -->
+              <requireJavaVersion>
+                <version>[17,)</version>
+              </requireJavaVersion>
+              <!-- 3.3.1 is where Maven started reading .mvn/jvm.config, which this repo depends on
+                   for google-java-format's jdk.compiler exports. A floor tied to a real requirement
+                   rather than a guess at what CI runners happen to ship. -->
+              <requireMavenVersion>
+                <version>[3.3.1,)</version>
+              </requireMavenVersion>
+              <!-- NFR-12: a published library must never depend on a SNAPSHOT — it makes a release
+                   unreproducible. The reactor's own 0.0.0 is a release version, not a snapshot. -->
+              <requireReleaseDeps/>
+              <banDuplicatePomDependencyVersions/>
+              <!-- "Convergence rules" of item 1.7: transitive versions of the same artifact must
+                   agree. Trivially satisfied today (no third-party dependencies exist) and the
+                   reason it is wired now is that it stops being trivial the moment M2 adds one. -->
+              <dependencyConvergence/>
+              <bannedDependencies>
+                <excludes>
+                  <!-- FR-25: production code must not import the test module. `d4np-test` is legal
+                       at TEST scope only; the include below is the exception to this ban. -->
+                  <exclude>it.d4np:d4np-test</exclude>
+                  <!-- Spec §1.1 / NFR-07: the jakarta.* namespace only, javax.* explicitly out of
+                       scope. Checkstyle's IllegalImport catches a javax EE *import* in our own
+                       sources; this catches the ARTIFACT entering the graph at all, including
+                       transitively through a dependency nobody read. The two are complementary,
+                       not redundant. Enumerated by EE groupId — JDK packages javax.crypto and
+                       javax.sql ship in the JDK and have no artifact, so they cannot be caught
+                       here by accident (FR-12 and FR-05 need them). -->
+                  <exclude>javax.validation:*</exclude>
+                  <exclude>javax.persistence:*</exclude>
+                  <exclude>javax.servlet:*</exclude>
+                  <exclude>javax.ws.rs:*</exclude>
+                  <exclude>javax.inject:*</exclude>
+                  <exclude>javax.transaction:*</exclude>
+                  <exclude>javax.enterprise:*</exclude>
+                  <exclude>javax.ejb:*</exclude>
+                  <exclude>javax.jms:*</exclude>
+                  <exclude>javax.annotation:*</exclude>
+                  <exclude>javaee:*</exclude>
+                  <exclude>javax:javaee-api</exclude>
+                </excludes>
+                <includes>
+                  <!-- groupId:artifactId:version:type:scope — the test module at test scope only. -->
+                  <include>it.d4np:d4np-test:*:*:test</include>
+                </includes>
+              </bannedDependencies>
+            </rules>
+          </configuration>
+          <executions>
+            <execution>
+              <!-- Bound to `validate`, so the policy is checked by every ordinary build and fails
+                   before anything is compiled. This execution carries no <rules> of its own, so it
+                   inherits the plugin-level set above. -->
+              <id>enforce-universal</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -215,6 +292,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <!-- Enforcer IS bound here (unlike Spotless and Checkstyle above), because a dependency-policy
+           gate that only runs when someone remembers to invoke it is the review promise NFR-08 exists
+           to replace. It runs at `validate`, costs no compilation, and every module inherits it. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

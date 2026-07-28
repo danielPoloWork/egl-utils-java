@@ -29,4 +29,43 @@
       <artifactId>d4np-json</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001. This is one of the two modules written as a BAN LIST rather than an
+       allowlist, and the reason is transitive closure, not laziness.
+
+       Spring Boot drags a large and version-dependent graph, and this module's job IS to depend on
+       it. An allowlist would therefore have to enumerate Spring's own transitive closure and be
+       re-enumerated on every Spring upgrade — turning an ADR-001 policy gate into a maintenance
+       chore that fails for reasons unrelated to the policy. What ADR-001 actually claims about this
+       module is narrower: Redisson has no business here, because distributed locking belongs to
+       d4np-lock-redisson. That is precisely what is banned.
+
+       Jackson is deliberately NOT banned: it arrives legitimately and transitively through
+       d4np-json, which this module depends on by design (spec §3). -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>org.redisson:*</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

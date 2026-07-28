@@ -18,4 +18,50 @@
 
   <name>Core</name>
   <description>Zero third-party dependencies: creational and structural patterns, the ADR-002 error model, validation, monitoring and conversion helpers.</description>
+
+  <!-- ITEM 1.7 / NFR-08: "core has ZERO third-party dependencies (jakarta.validation-api as
+       provided)". Written as an ALLOWLIST (default-deny) rather than a list of banned frameworks,
+       because the contract is "nothing", not "not Spring, Jackson or Redisson" — a ban list would
+       have let commons-lang3 in. It is transitive, so it also catches a third-party artifact that
+       arrives through something else rather than being declared here.
+
+       Adding a compile dependency to this module therefore requires editing this allowlist, which
+       is the point: it makes the zero-dependency claim a reviewed decision instead of a habit. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <!-- Pattern is groupId:artifactId:version:type:scope. -->
+                    <include>it.d4np:*</include>
+                    <!-- TEST scope is out of scope for NFR-08 by design: test artifacts are not
+                         transitive to consumers, so they constrain neither the public surface nor a
+                         consumer's graph. Written as a scope wildcard rather than by enumerating
+                         junit/assertj, so upgrading the test stack cannot break this module. -->
+                    <include>*:*:*:*:test</include>
+                    <!-- The one third-party artifact spec §3 permits here, and only as provided. -->
+                    <include>jakarta.validation:jakarta.validation-api:*:*:provided</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

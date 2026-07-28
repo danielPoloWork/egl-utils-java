@@ -25,4 +25,41 @@
       <artifactId>d4np-core</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001: spec §3 gives this module "test scope only" and no third-party of its own,
+       so the allowlist is internal modules plus test scope. Default-deny.
+
+       The complementary half of FR-25 — nobody may depend on THIS module from production code — is a
+       rule about other modules, so it lives in the parent as a family-wide ban on
+       `it.d4np:d4np-test` outside test scope. A module cannot enforce that about itself. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>it.d4np:*</include>
+                    <include>*:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

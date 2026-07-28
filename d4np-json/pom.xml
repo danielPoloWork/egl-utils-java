@@ -25,4 +25,43 @@
       <artifactId>d4np-core</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001: this module exists so that Jackson is optional for everyone else, so
+       Jackson is allowed here and nowhere upstream. Default-deny otherwise — in particular Spring
+       stays out, because FR-20's JsonMapper must be usable without it.
+
+       The `com.fasterxml.jackson*` prefix covers databind, annotations, core and the jsr310 datatype
+       module in one entry; verified that enforcer matches a groupId prefix that way, so this does not
+       silently miss `com.fasterxml.jackson.datatype`. Artifacts arrive with FR-20 (item 4.1). -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>it.d4np:*</include>
+                    <include>*:*:*:*:test</include>
+                    <include>com.fasterxml.jackson*:*</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
