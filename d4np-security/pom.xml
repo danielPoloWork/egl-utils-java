@@ -25,4 +25,44 @@
       <artifactId>d4np-core</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001: spec §3 allows exactly one third-party family here — Nimbus JOSE+JWT, the
+       JWT library ADR-003 chose. Default-deny, so Spring, Jackson and Redisson are excluded by the
+       absence of an entry rather than by a ban that could be forgotten.
+
+       The artifact is not declared yet; it arrives with FR-11 (item 6.1). The allowlist is written
+       now anyway, because the alternative is discovering the policy at the moment you are trying to
+       add a dependency. If Nimbus turns out to drag a transitive artifact of its own, the build will
+       say so by name and extending this list is a deliberate, reviewed act — which is the intent. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>it.d4np:*</include>
+                    <include>*:*:*:*:test</include>
+                    <include>com.nimbusds:*</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -25,4 +25,42 @@
       <artifactId>d4np-concurrent</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001. The second BAN LIST module, for the same transitive-closure reason as the
+       Spring adapter, and here it is sharper: Redisson itself depends on Netty and on Jackson. An
+       allowlist would have to enumerate that closure, and banning Jackson here — which a naive
+       reading of "Jackson lives only in d4np-json" suggests — would break this module the moment
+       Redisson is actually added. That is a real trap, so it is recorded rather than discovered.
+
+       What ADR-001 claims about this module is that Spring has no business here: the whole point of
+       depending on d4np-concurrent's `DistributedLock` interface is that a Redisson lock works
+       without a Spring container. Spring and AspectJ are therefore banned; Redisson and whatever it
+       brings are its own business. Artifacts arrive with item 5.3. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>org.springframework*:*</exclude>
+                    <exclude>org.aspectj:*</exclude>
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

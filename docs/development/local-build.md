@@ -53,6 +53,33 @@ it by full coordinates. Excluding the module is also the semantically correct an
 Checkstyle needs no exclusion: `maven-checkstyle-plugin` is in the default pluginGroup
 `org.apache.maven.plugins`, so its goal prefix resolves without inheritance.
 
+## The dependency policy runs on every build
+
+`maven-enforcer` is bound to `validate`, so `mvn -B clean verify` already enforces ADR-001 / NFR-08 —
+you do not need a separate command. To check only the policy:
+
+```bash
+mvn -B validate
+```
+
+**Do not use `mvn enforcer:enforce`.** A bare CLI goal runs only the `default-cli` execution, which
+sees the parent's universal rules and **silently skips every per-module rule** — it reports success
+with a banned dependency present. CI made exactly that mistake until item 1.7.
+
+Each module declares its own policy, and the form differs by contract
+([ADR-0006](../adr/0006-enforce-the-dependency-policy-per-module.md)):
+
+- **`core`, `jdbc`, `concurrent`, `test`, `security`, `json` are default-deny.** Adding a compile
+  dependency means adding it to that module's `<includes>` allowlist. That is deliberate friction —
+  "core has zero third-party dependencies" is a contract, not a habit. Test-scope artifacts are
+  exempt via a scope wildcard, so upgrading JUnit or adding a test library needs no change.
+- **`spring-adapter` and `lock-redisson` are default-allow**, banning only the frameworks that are
+  foreign to them, because an allowlist there would have to track Spring's and Redisson's transitive
+  closures.
+
+If enforcer fails, it names the artifact and the path it arrived by. Extending an allowlist is the
+right fix when the dependency is legitimate for that module; if it is not, the rule just did its job.
+
 ## JPMS: every code module ships a `module-info.java`
 
 Eight modules carry a descriptor; `d4np-bom` cannot (no sources). `d4np-core` owns the family root

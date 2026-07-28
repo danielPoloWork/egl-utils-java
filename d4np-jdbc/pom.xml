@@ -25,4 +25,40 @@
       <artifactId>d4np-core</artifactId>
     </dependency>
   </dependencies>
+
+  <!-- ITEM 1.7 / ADR-001: spec §3 says "no driver deps — JDBC API only". The JDBC API ships in the
+       JDK (java.sql), so it has no artifact, which makes this module's allowlist the same as core's
+       minus the jakarta exemption: internal modules and test-scope artifacts, nothing else.
+       Default-deny, because "JDBC API only" is a statement about everything, not about frameworks.
+       A driver added for tests is legal at test scope — H2 for FR-05's suite is the expected case. -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-adr-001</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>*</exclude>
+                  </excludes>
+                  <includes>
+                    <include>it.d4np:*</include>
+                    <include>*:*:*:*:test</include>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -520,6 +520,54 @@ def check_jpms():
             fail(name, f"{artifact}: module-info and pom.xml disagree — " + "; ".join(detail))
 
 
+# ---------------------------------------------------------------------------
+# 10. Every module carries a dependency policy (ITEM 1.7)
+# ---------------------------------------------------------------------------
+# NFR-08 is per-module by nature: core may not see Jackson, and d4np-json exists in order to see it.
+# That means the framework-isolation rules cannot live in the parent, and a module without its own
+# `enforce-adr-001` execution therefore has NO dependency policy at all — while still building green,
+# because the parent's universal rules pass. A new module added in M2-M7 would inherit that silence.
+#
+# So this asserts the presence of the execution, not its contents. Judging the contents would mean
+# re-encoding ADR-001 here, and a policy restated in two places drifts; the rules' correctness is
+# established by the negative-test matrix recorded in ADR-0006 instead.
+_ENFORCER_EXEC_ID = "enforce-adr-001"
+
+
+def check_enforcer():
+    name = "module-dependency-policy"
+    parent = os.path.join(ROOT, "pom.xml")
+    if not os.path.exists(parent):
+        return
+    ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+    proot = ET.parse(parent).getroot()
+
+    # The parent owns the family-wide rules; without them FR-25 and the javax ban are unpoliced.
+    ptext = read("pom.xml")
+    if "enforce-universal" not in ptext:
+        fail(name, "the parent pom.xml declares no `enforce-universal` enforcer execution, so the "
+                   "family-wide rules (FR-25 test-scope ban, javax EE ban) do not run")
+
+    for mod in [el.text.strip() for el in proot.findall("m:modules/m:module", ns)]:
+        pom = os.path.join(ROOT, mod, "pom.xml")
+        if not os.path.exists(pom):
+            continue  # jpms-congruence already reports a missing module POM
+        root = ET.parse(pom).getroot()
+        if (root.findtext("m:packaging", default="jar", namespaces=ns)).strip() == "pom":
+            # The BOM has no dependencies of its own to police, and carries no parent by design
+            # (ADR-001/NFR-09), so it could not inherit the plugin even if it did.
+            continue
+        ids = [
+            e.findtext("m:id", namespaces=ns)
+            for e in root.findall(
+                "m:build/m:plugins/m:plugin/m:executions/m:execution", ns
+            )
+        ]
+        if _ENFORCER_EXEC_ID not in ids:
+            fail(name, f"{mod} declares no `{_ENFORCER_EXEC_ID}` enforcer execution, so ADR-001's "
+                       f"framework-isolation rules are not enforced for it (NFR-08)")
+
+
 CHECKS = [
     check_version_lockstep,
     check_adr_index,
@@ -530,6 +578,7 @@ CHECKS = [
     check_i18n_freshness,
     check_posture,
     check_jpms,
+    check_enforcer,
 ]
 
 
