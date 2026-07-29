@@ -2,7 +2,7 @@
 
 > A modular set of Java libraries implementing enterprise design patterns for Spring Boot and Jakarta EE systems — a zero-dependency core plus opt-in capability modules (JDBC, concurrency, security, JSON) and framework adapters.
 
-![Status](https://img.shields.io/badge/Status-v0.0.0-blue)
+![Status](https://img.shields.io/badge/Status-v0.1.0-blue)
 
 Part of the **Enterprise-Grade Libraries** series. A
 library written in **Java 21 (LTS)**, built and governed to an enterprise quality
