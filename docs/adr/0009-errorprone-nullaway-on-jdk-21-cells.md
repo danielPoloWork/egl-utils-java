@@ -126,6 +126,15 @@ each latest-stable — is the unit of choice.
   `AnnotatedPackages` out of the POM *comment that explains the option*, so deleting the option left
   the check green. POM text is now matched with comments stripped, mirroring `jpms-congruence`'s
   `_strip_java_comments`.
+- **CI logs do not evidence that the analyzer ran, and that is worth knowing.** At `-B` verbosity
+  `maven-compiler-plugin` prints the same line on both toolchains (`Compiling 1 source file with javac
+  [debug release 17]`) and names no processor path, so a green JDK-21 job is consistent with the profile
+  having activated *or* not. Activation here rests on the profile's JDK range, verified locally on the
+  exact Temurin builds the matrix resolves (21.0.12+8 activates, 17.0.20+8 does not). To get direct
+  CI-side evidence, push a commit containing a deliberate violation and watch the 21 cells fail while
+  the 17 cells pass, or add `-X` to one job and look for `-Xplugin:ErrorProne` in the javac invocation.
+  Neither was done here to avoid a throwaway pull request, since the workflow triggers only on
+  `pull_request` and pushes to `main`.
 - **A version bump is a paired bump.** Upgrading ErrorProne without checking NullAway (or the reverse)
   reproduces item 1.4's failure. Dependabot will offer them separately; the reviewer must verify the
   pair, and the cause chain — not the `ProvisionException` wrapper — is what identifies a mismatch.
