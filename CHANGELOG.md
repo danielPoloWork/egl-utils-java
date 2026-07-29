@@ -17,6 +17,9 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 - JMH and jcstress harnesses: `mvn -Pjmh verify` and `mvn -Pjcstress verify` now build and run
   measurement code under `<module>/src/bench/java` and `<module>/src/jcstress/java`
   ([ADR-0007](docs/adr/0007-nfr-harnesses-as-test-scope-profiles.md)).
+- Static analysis in the build: ErrorProne 2.50.0 + NullAway 0.13.8 run during compilation on JDK 21+
+  toolchains, with NullAway at `ERROR`, and javac warnings are errors on every platform
+  ([ADR-0009](docs/adr/0009-errorprone-nullaway-on-jdk-21-cells.md)).
 
 ### Changed
 

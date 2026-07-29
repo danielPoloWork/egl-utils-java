@@ -38,7 +38,7 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **12 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **13 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows.
 
@@ -54,6 +54,7 @@ page — including if a re-render of the generated docs ever drops the rows.
 | [0006](0006-enforce-the-dependency-policy-per-module.md) | Enforce the ADR-001 dependency policy per module, with default-deny where the contract is "clean" | Accepted |
 | [0007](0007-nfr-harnesses-as-test-scope-profiles.md) | Run the JMH and jcstress harnesses from profile-activated, test-scope source roots | Accepted |
 | [0008](0008-index-the-pre-governance-adrs-in-place.md) | Index the pre-governance ADRs in place, keeping their ids | Accepted |
+| [0009](0009-errorprone-nullaway-on-jdk-21-cells.md) | Run ErrorProne + NullAway on the JDK 21+ cells, and enforce warnings-as-errors everywhere | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

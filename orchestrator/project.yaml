@@ -201,10 +201,12 @@ toolchain:                   # Phase 3. Profile defaults from profiles/java.yaml
     # a project that does not declare it — by prefix OR by full coordinates. Item 1.4 fixed this in
     # the RENDERED ci.yml but not here, so a re-render silently reverted it; 1.5 syncs the source.
     format_check: "mvn -B spotless:check -pl '!d4np-bom'"
-    lint:         "mvn -B checkstyle:check"   # ErrorProne/NullAway will bind into compilation once
-                                              # item 1.11 wires them, so they will also run as part
-                                              # of `build`; checkstyle needs no -pl exclusion, being
-                                              # in the default pluginGroup org.apache.maven.plugins
+    lint:         "mvn -B checkstyle:check"   # ErrorProne/NullAway ARE now bound into compilation
+                                              # (item 1.11), so `build` runs them too — on JDK 21+
+                                              # only, because ErrorProne 2.43.0+ is class-file 65 and
+                                              # cannot load on the 17 cells (ADR-0009). Checkstyle
+                                              # needs no -pl exclusion, being in the default
+                                              # pluginGroup org.apache.maven.plugins
     bench:        "mvn -B -Pjmh verify"       # JMH harnesses under <module>/src/bench/java
                                               # (capabilities.bench). Item 1.8 made this command
                                               # real: the `jmh` profile did not exist, and Maven

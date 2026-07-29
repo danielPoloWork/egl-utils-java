@@ -72,11 +72,14 @@
     <google.java.format.version>1.27.0</google.java.format.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
     <checkstyle.version>10.26.1</checkstyle.version>
-    <!-- ErrorProne + NullAway are NOT configured here — see ROADMAP item 1.11. They need three
-         JDK-21-specific javac flags and a compatible ErrorProne/NullAway version pair, and the
-         latest stable of each (2.50.0 / 0.12.7) does not interoperate. Keeping them out leaves the
-         build matrix green instead of trading four passing jobs for a static-analysis tool that is
-         not yet wired. -->
+    <!-- Item 1.11 — ErrorProne + NullAway. The PAIR is the unit of choice, not two independent
+         latest-stables: 2.50.0 + NullAway 0.12.7 was measured to fail with
+         `ProvisionException: Failed to initialize com.uber.nullaway.NullAway`, because NullAway
+         compiles against ErrorProne's internal check API and that API moves between releases.
+         2.50.0 + 0.13.8 is the pair verified here. See docs/adr/0009 and the `errorprone` profile
+         below for why it is JDK-21-activated. -->
+    <errorprone.version>2.50.0</errorprone.version>
+    <nullaway.version>0.13.8</nullaway.version>
 
     <!-- Item 1.7 — the ADR-001 dependency policy as a build gate (NFR-08). Latest stable. -->
     <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
@@ -175,7 +178,17 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${compiler.plugin.version}</version>
-                </plugin>
+          <configuration>
+            <!-- ITEM 1.11. AGENTS.md §9 and §10 have claimed "warnings-as-errors on the diff" since
+                 the scaffold, and nothing enforced it. Declared HERE rather than in the `errorprone`
+                 profile so all six build cells enforce it, including the three JDK-17 cells where
+                 ErrorProne cannot run: a javac warning is a javac warning on either toolchain.
+                 Verified clean on Temurin 17 and 21 with the harness profiles active before being
+                 switched on, so it starts from a green tree rather than a suppression list. -->
+            <showWarnings>true</showWarnings>
+            <failOnWarning>true</failOnWarning>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>com.diffplug.spotless</groupId>
           <artifactId>spotless-maven-plugin</artifactId>
@@ -380,6 +393,64 @@
        verification code; test scope is where verification code belongs.
        ========================================================================================== -->
   <profiles>
+    <!-- ITEM 1.11 — ErrorProne + NullAway, bound to compilation itself.
+
+         SELF-ACTIVATING ON JDK 21+, and that is the whole design: ErrorProne 2.43.0 onward is
+         compiled to class-file 65, so it cannot even load on the Temurin 17 cells (verified by
+         reading the majors out of the published jars — 2.42.0 is the last release at class-file 61).
+         An `<activation><jdk>` keeps the analysis automatic wherever it can run and inert where it
+         cannot, instead of a `-P` flag every contributor and CI job must remember. The published
+         baseline is unaffected: `release 17` still governs the bytecode in every cell.
+         Consequence, stated rather than hidden: the three JDK-17 build cells compile WITHOUT this
+         analysis. Three JDK-21 cells plus the `quality` job run it, and a compile-time checker's
+         verdict does not depend on which JDK hosts it. -->
+    <profile>
+      <id>errorprone</id>
+      <activation>
+        <jdk>[21,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <!-- Plugin level, NOT per execution: main and test sources are both analysed, and
+                   item 1.8's harness profiles append their own processor paths to this list from
+                   their `default-testCompile` executions (combine.children="append"). -->
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>com.google.errorprone</groupId>
+                  <artifactId>error_prone_core</artifactId>
+                  <version>${errorprone.version}</version>
+                </path>
+                <path>
+                  <groupId>com.uber.nullaway</groupId>
+                  <artifactId>nullaway</artifactId>
+                  <version>${nullaway.version}</version>
+                </path>
+              </annotationProcessorPaths>
+              <compilerArgs>
+                <!-- Both flags are REQUIREMENTS on JDK 21+, not tuning: ErrorProne names each one
+                     in its own failure message when it is missing. `compilePolicy=simple` stops
+                     javac from interleaving attribution and flow analysis, which ErrorProne's
+                     matchers cannot survive; `should-stop=ifError=FLOW` keeps javac running to
+                     the flow phase so NullAway's dataflow has something to read. -->
+                <arg>-XDcompilePolicy=simple</arg>
+                <arg>--should-stop=ifError=FLOW</arg>
+                <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
+                <!-- One argument, space-separated, as ErrorProne's javac plugin expects.
+                     NullAway is promoted to ERROR because a nullability finding that only warns is
+                     the review promise this replaces; AnnotatedPackages is what tells NullAway
+                     which code it may assume is non-null by default. -->
+                <arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=it.d4np -XepExcludedPaths:.*/target/generated-(test-)?sources/.*</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
     <profile>
       <id>jmh</id>
       <dependencies>
