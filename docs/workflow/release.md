@@ -20,7 +20,11 @@ pre-1.0 milestone-driven.
 2. **Roll the changelog** — move the `[Unreleased]` entries into a new per-version file
    `docs/changelog/v<MAJOR>/v<X.Y.Z>.md` and add an index row to `CHANGELOG.md`.
 3. **Refresh the README** status badge (and milestone table on a MINOR that closes a
-   milestone).
+   milestone). Note the R-07 interaction, verified while cutting v0.1.0: `README.md` is a
+   *generated* file and the renderer seeds the badge from the manifest's `start_version`
+   (`0.0.0`), which is the project's starting seed and deliberately does **not** track releases.
+   A re-render therefore resets the badge to `v0.0.0`; re-bump it, and note that
+   `version-lockstep` fails loudly until you do, so the regression cannot ship silently.
 4. **Draft release notes** under `docs/releases/v<X.Y.Z>.md`.
 5. **Run the consistency lint** (`python tools/consistency_lint.py`) — version lockstep must
    pass.

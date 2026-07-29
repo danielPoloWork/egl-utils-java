@@ -10,6 +10,4 @@ README badge.
 
 | Version | Date | Highlights | Notes |
 |---------|------|------------|-------|
-| —       | —    | —          | —     |
-
-_No releases yet — the first one lands when Milestone 1 ships._
+| v0.1.0 | 2026-07-29 | Milestone 1 — the nine-module reactor, six-cell CI matrix, and every quality gate proven against a deliberate violation. **No library API yet.** | [v0.1.0.md](v0.1.0.md) |

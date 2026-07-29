@@ -17,7 +17,7 @@
 
   <groupId>it.d4np</groupId>
   <artifactId>d4np-parent</artifactId>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <packaging>pom</packaging>
 
   <name>egl-utils-java (parent)</name>
@@ -290,7 +290,7 @@
                 <version>[3.3.1,)</version>
               </requireMavenVersion>
               <!-- NFR-12: a published library must never depend on a SNAPSHOT — it makes a release
-                   unreproducible. The reactor's own 0.0.0 is a release version, not a snapshot. -->
+                   unreproducible. The reactor's own version is a release version, not a snapshot. -->
               <requireReleaseDeps/>
               <banDuplicatePomDependencyVersions/>
               <!-- "Convergence rules" of item 1.7: transitive versions of the same artifact must
