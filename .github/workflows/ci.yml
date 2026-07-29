@@ -201,6 +201,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with: { distribution: temurin, java-version: '21', cache: maven }
+      # STILL RED, and owned elsewhere — same shape as the japicmp step above: the plugin is not
+      # declared, so this fails with `No plugin found for prefix 'dependency-check'`. ROADMAP item 6.4
+      # owns it and must *introduce* the plugin before tightening it into a gate; item 6.0 (RFC-0005)
+      # settles the CVSS threshold and suppression policy that NFR-11 leaves as a [GAP]. Not item 8.4 —
+      # that is GPG-signed Central publication, which the v0.1.0 release artifacts once miscited.
       - run: mvn -B dependency-check:check
 
   # Reproducible performance gate — runs only when the project has a benchmark suite.
