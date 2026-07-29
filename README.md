@@ -30,6 +30,10 @@ The frozen specification is in
 ```bash
 mvn -B clean verify
 mvn -B test
+
+# NFR harnesses — the numbers behind a performance or thread-safety claim (ADR-0007)
+mvn -B -Pjmh verify        # JMH benchmarks under <module>/src/bench/java
+mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/java
 ```
 
 - **Toolchain:** Maven 3.9+ (multi-module reactor), JUnit 5 + AssertJ; jqwik (property tests); jcstress (concurrency); H2 (JDBC integration), Spotless (google-java-format), ErrorProne + NullAway + Checkstyle; maven-enforcer for the ADR-001 dependency rules.

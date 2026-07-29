@@ -205,7 +205,14 @@ toolchain:                   # Phase 3. Profile defaults from profiles/java.yaml
                                               # item 1.11 wires them, so they will also run as part
                                               # of `build`; checkstyle needs no -pl exclusion, being
                                               # in the default pluginGroup org.apache.maven.plugins
-    bench:        "mvn -B -Pjmh verify"       # JMH harnesses under bench/ (capabilities.bench)
+    bench:        "mvn -B -Pjmh verify"       # JMH harnesses under <module>/src/bench/java
+                                              # (capabilities.bench). Item 1.8 made this command
+                                              # real: the `jmh` profile did not exist, and Maven
+                                              # only WARNS on an unmatched profile, so the rendered
+                                              # `benchmark` job passed having measured nothing. The
+                                              # jcstress counterpart is `mvn -B -Pjcstress verify`
+                                              # in ci.extra_jobs; this field has no jcstress
+                                              # sibling in the template. See ADR-0007.
 
 ci:                          # Profile matrix, re-pointed from Gradle to Maven caching.
   tier1_platforms: "Linux / Windows / macOS on Temurin JDK 17 & 21"

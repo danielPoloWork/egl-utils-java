@@ -22,3 +22,4 @@ Status transitions: `Proposed` → `Accepted` → (`Superseded by ADR-XXXX` | `D
 | [0004](0004-declare-line-endings-and-cross-platform-format-checks.md) | Declare line endings in `.gitattributes`, and run format checks on more than one platform | Accepted |
 | [0005](0005-jpms-module-names-and-export-less-descriptors.md) | JPMS module names, and descriptors that land before the code they describe | Accepted |
 | [0006](0006-enforce-the-dependency-policy-per-module.md) | Enforce the ADR-001 dependency policy per module, with default-deny where the contract is "clean" | Accepted |
+| [0007](0007-nfr-harnesses-as-test-scope-profiles.md) | Run the JMH and jcstress harnesses from profile-activated, test-scope source roots | Accepted |

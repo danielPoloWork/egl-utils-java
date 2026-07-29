@@ -80,6 +80,37 @@
 
     <!-- Item 1.7 — the ADR-001 dependency policy as a build gate (NFR-08). Latest stable. -->
     <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
+
+    <!-- Item 1.8 — the two NFR measurement harnesses of spec §6. Latest stable of each; JMH 1.37
+         is also the floor the spec names ("JMH 1.37+"). -->
+    <jmh.version>1.37</jmh.version>
+    <jcstress.version>0.16</jcstress.version>
+    <build.helper.plugin.version>3.6.0</build.helper.plugin.version>
+    <exec.plugin.version>3.6.3</exec.plugin.version>
+
+    <!-- HARNESS OPT-IN, per module. The `jmh`/`jcstress` profiles are inherited by all nine
+         modules, but only a module that actually OWNS harness sources may run a harness: JMH exits
+         non-zero on "No matching benchmarks" and jcstress on an empty test list, so an
+         unconditional runner would fail the eight modules that have nothing to measure. A module
+         opts in by overriding the switch to `false` in its own POM, next to the sources — and
+         consistency_lint.py's `harness-opt-in` check asserts the two agree in both directions, so
+         neither a silent skip nor an orphan switch can survive. -->
+    <jmh.skip>true</jmh.skip>
+    <jcstress.skip>true</jcstress.skip>
+
+    <!-- PR-GRADE measurement settings, not publication-grade. One fork and one short iteration is
+         enough to prove the harness runs end to end, which is all the CI `benchmark` and `jcstress`
+         jobs are for; spec §6 asks for 5x10 warmup/measurement iterations on the named reference
+         machine, and the numbers that back an NFR come from THAT run, overriding these on the
+         command line (e.g. -Djmh.forks=5 -Djmh.iterations=10, -Djcstress.mode=default). Recording
+         a CI number as an NFR result would be the mistake the manifest's own risk note already
+         flags (orchestrator/project.yaml `risks`): GitHub-hosted runners vary in CPU model and
+         steal time by far more than the NFR budgets do. -->
+    <jmh.forks>1</jmh.forks>
+    <jmh.warmup.iterations>1</jmh.warmup.iterations>
+    <jmh.iterations>1</jmh.iterations>
+    <jmh.time>1s</jmh.time>
+    <jcstress.mode>sanity</jcstress.mode>
   </properties>
 
   <!-- ADR-001 dependency order: core first, then capability leaves, then adapters, then the BOM. -->
@@ -151,6 +182,19 @@
           <version>${spotless.plugin.version}</version>
           <configuration>
             <java>
+              <!-- ITEM 1.8: the include set is declared because Spotless's default covers ONLY
+                   src/main/java and src/test/java. The harness roots src/bench/java and
+                   src/jcstress/java hold committed Java that no profile is needed to read, so
+                   without these four lines `spotless:check` would report a green format gate over
+                   sources it never opened — and the harness code would be unformattable in
+                   practice, since `spotless:apply` would not touch it either. Listing all four is
+                   required: setting <includes> REPLACES the defaults rather than adding to them. -->
+              <includes>
+                <include>src/main/java/**/*.java</include>
+                <include>src/test/java/**/*.java</include>
+                <include>src/bench/java/**/*.java</include>
+                <include>src/jcstress/java/**/*.java</include>
+              </includes>
               <googleJavaFormat>
                 <version>${google.java.format.version}</version>
               </googleJavaFormat>
@@ -168,6 +212,18 @@
           <configuration>
             <configLocation>config/checkstyle/checkstyle.xml</configLocation>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <!-- ITEM 1.8: stated explicitly because the default is ${project.testCompileSourceRoots},
+                 and src/bench/java and src/jcstress/java only BECOME source roots when -Pjmh or
+                 -Pjcstress is active — so the profile-less `mvn checkstyle:check` that CI's
+                 format-lint job runs would never see them. A harness that fails the naming and
+                 import rules the rest of the tree lives under is still a maintenance cost. A listed
+                 directory that does not exist is skipped, so this works for the seven modules that
+                 own no harness. -->
+            <testSourceDirectories>
+              <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
+              <testSourceDirectory>${project.basedir}/src/bench/java</testSourceDirectory>
+              <testSourceDirectory>${project.basedir}/src/jcstress/java</testSourceDirectory>
+            </testSourceDirectories>
             <consoleOutput>true</consoleOutput>
             <failsOnError>true</failsOnError>
             <violationSeverity>error</violationSeverity>
@@ -302,5 +358,236 @@
       </plugin>
     </plugins>
   </build>
+
+  <!-- ==========================================================================================
+       ITEM 1.8 — the NFR measurement harnesses (spec §6, NFR-01..06).
+
+       WHY THESE PROFILES EXIST AT ALL: `.github/workflows/ci.yml` has been invoking
+       `mvn -B -Pjmh verify` (job `benchmark`) and `mvn -B -Pjcstress verify` (job `jcstress`)
+       since the scaffold render, and NEITHER PROFILE EXISTED. Maven only WARNS on an unmatched
+       profile — "The requested profile "jmh" could not be activated because it does not exist" —
+       so both jobs ran an ordinary `verify` and reported a green performance and concurrency gate
+       having measured neither. Same vacuous-green class as the unpinned surefire of item 1.3 and
+       the `enforcer:enforce` CLI goal of item 1.7.
+
+       WHY THE HARNESS SOURCES ARE COMPILED AS TEST-SCOPE ROOTS (ADR-0007): jmh-core and
+       jcstress-core are third-party artifacts, and ADR-001/NFR-08 gives core, jdbc, concurrent and
+       test a default-DENY allowlist. At compile scope they would each need an allowlist entry —
+       i.e. the zero-third-party-dependency claim would be weakened to accommodate measurement
+       tooling, and jmh-core would land in the consumer-visible graph. At TEST scope they are
+       already permitted by the `*:*:*:*:test` wildcard every module carries, they are not
+       transitive to consumers, and they cannot reach a published JAR. The harness code is
+       verification code; test scope is where verification code belongs.
+       ========================================================================================== -->
+  <profiles>
+    <profile>
+      <id>jmh</id>
+      <dependencies>
+        <!-- TEST scope: see the ADR-0007 note above. jmh-core carries jopt-simple and commons-math3
+             transitively; both are test-scope too, so dependencyConvergence is the only universal
+             rule that sees them. -->
+        <dependency>
+          <groupId>org.openjdk.jmh</groupId>
+          <artifactId>jmh-core</artifactId>
+          <version>${jmh.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${build.helper.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>add-bench-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/bench/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- Maven's own id for the test-compile execution: naming it here MERGES this
+                     configuration into that execution rather than adding a second one. -->
+                <id>default-testCompile</id>
+                <configuration>
+                  <!-- JMH generates its runner classes and the META-INF/BenchmarkList resource from
+                       @Benchmark via an annotation processor. combine.children="append" so that
+                       -Pjmh,jcstress activates BOTH processors: without it the second profile's
+                       list replaces the first's and one harness silently generates nothing. -->
+                  <annotationProcessorPaths combine.children="append">
+                    <path>
+                      <groupId>org.openjdk.jmh</groupId>
+                      <artifactId>jmh-generator-annprocess</artifactId>
+                      <version>${jmh.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>${exec.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>run-jmh</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <!-- CONFIGURATION LIVES IN THE EXECUTION, NOT AT PLUGIN LEVEL, and that is not
+                     style: a plugin-level <configuration> is shared by every execution of that
+                     plugin, and the `jcstress` profile below declares the SAME plugin. With both
+                     profiles active (-Pjmh,jcstress) the two plugin-level blocks merge, one set of
+                     <arguments> wins, and both executions run the same command — measured: jcstress
+                     ran twice, JMH never ran, and the build still reported success. Per-execution
+                     configuration is not shared, so the two compose. -->
+                <configuration>
+                  <!-- `exec` (a real child process), NOT `java` (in-process): JMH forks a JVM per
+                       benchmark and builds that command line from java.class.path. Under exec:java
+                       the benchmarks live in the plugin's isolated classloader, so the fork would
+                       start a JVM that cannot see them. -Djmh.forks=0 would dodge that at the cost
+                       of the isolation the measurement depends on. -->
+                  <skip>${jmh.skip}</skip>
+                  <executable>${java.home}/bin/java</executable>
+                  <classpathScope>test</classpathScope>
+                  <arguments>
+                    <argument>-classpath</argument>
+                    <classpath/>
+                    <argument>org.openjdk.jmh.Main</argument>
+                    <argument>-f</argument>
+                    <argument>${jmh.forks}</argument>
+                    <argument>-wi</argument>
+                    <argument>${jmh.warmup.iterations}</argument>
+                    <argument>-i</argument>
+                    <argument>${jmh.iterations}</argument>
+                    <argument>-w</argument>
+                    <argument>${jmh.time}</argument>
+                    <argument>-r</argument>
+                    <argument>${jmh.time}</argument>
+                    <!-- Machine-readable results, so a future baseline comparison (item 8.3) has a
+                         file to read instead of scraped console output. -->
+                    <argument>-rf</argument>
+                    <argument>json</argument>
+                    <argument>-rff</argument>
+                    <argument>${project.build.directory}/jmh-result.json</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>jcstress</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjdk.jcstress</groupId>
+          <artifactId>jcstress-core</artifactId>
+          <version>${jcstress.version}</version>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>${build.helper.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>add-jcstress-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/jcstress/java</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default-testCompile</id>
+                <configuration>
+                  <annotationProcessorPaths combine.children="append">
+                    <path>
+                      <groupId>org.openjdk.jcstress</groupId>
+                      <artifactId>jcstress-core</artifactId>
+                      <version>${jcstress.version}</version>
+                    </path>
+                  </annotationProcessorPaths>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>${exec.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>run-jcstress</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <!-- Per-execution, for the reason spelled out in the `jmh` profile above: a
+                     plugin-level block would be shared with `run-jmh` and the two would overwrite
+                     each other under -Pjmh,jcstress. -->
+                <configuration>
+                  <!-- Same reason as JMH for `exec` over `java`, and stronger here: jcstress's whole
+                       method is to fork JVMs and re-run each test under different scheduling and
+                       different JIT stress flags, so it cannot work in-process. -->
+                  <skip>${jcstress.skip}</skip>
+                  <executable>${java.home}/bin/java</executable>
+                  <classpathScope>test</classpathScope>
+                  <!-- REQUIRED, and found by running it: jcstress writes its binary result blob
+                       (jcstress-results-<timestamp>.bin.gz) to the process working directory and
+                       offers NO option to redirect it — `-r` governs only the HTML report. With the
+                       default working directory that is the module root, so every run dropped an
+                       untracked artifact next to pom.xml, one `git add -A` away from being
+                       committed. Pointing the process at target/ puts it where `mvn clean` can
+                       reach it. Safe because <classpath/> expands to absolute paths. -->
+                  <workingDirectory>${project.build.directory}</workingDirectory>
+                  <arguments>
+                    <argument>-classpath</argument>
+                    <classpath/>
+                    <argument>org.openjdk.jcstress.Main</argument>
+                    <argument>-m</argument>
+                    <argument>${jcstress.mode}</argument>
+                    <argument>-r</argument>
+                    <argument>${project.build.directory}/jcstress-results</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

@@ -568,6 +568,70 @@ def check_enforcer():
                        f"framework-isolation rules are not enforced for it (NFR-08)")
 
 
+# ---------------------------------------------------------------------------
+# 11. The NFR harnesses are wired to something (ITEM 1.8)
+# ---------------------------------------------------------------------------
+# This check exists because of a defect it would have caught two milestones earlier: ci.yml has been
+# running `mvn -B -Pjmh verify` and `mvn -B -Pjcstress verify` since the scaffold render while
+# NEITHER PROFILE EXISTED, and Maven only WARNS on an unmatched profile. Both jobs therefore reported
+# a green performance and concurrency gate having measured nothing at all.
+#
+# Two things are asserted, and neither is a restatement of the POM:
+#
+#   * the parent declares both profiles, so the commands CI runs resolve to something;
+#   * per module, owning harness sources and opting the runner in are the SAME fact. JMH and jcstress
+#     both exit non-zero on an empty test list, so the parent defaults both switches to skip and a
+#     module opts in beside its sources. That leaves two ways to be silently wrong — sources with no
+#     opt-in (never measured, green) and an opt-in with no sources (fails the build for the wrong
+#     reason) — and this asserts the bijection in both directions.
+#
+# What is NOT asserted: whether a given NFR has a harness yet. Most do not (M2-M6 own them), and a
+# check that demanded one per NFR would have to be disabled today, which is how gates die.
+_HARNESSES = (("jmh", "src/bench/java"), ("jcstress", "src/jcstress/java"))
+
+
+def check_harness_opt_in():
+    name = "harness-opt-in"
+    parent = os.path.join(ROOT, "pom.xml")
+    if not os.path.exists(parent):
+        return
+    ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+    proot = ET.parse(parent).getroot()
+
+    profiles = {
+        (el.findtext("m:id", default="", namespaces=ns)).strip()
+        for el in proot.findall("m:profiles/m:profile", ns)
+    }
+    for profile, _root in _HARNESSES:
+        if profile not in profiles:
+            fail(name, f"the parent pom.xml declares no `{profile}` profile, but CI runs "
+                       f"`mvn -B -P{profile} verify` — Maven only warns on an unmatched profile, so "
+                       f"that job would pass having measured nothing")
+
+    for mod in [el.text.strip() for el in proot.findall("m:modules/m:module", ns)]:
+        pom = os.path.join(ROOT, mod, "pom.xml")
+        if not os.path.exists(pom):
+            continue  # jpms-congruence already reports a missing module POM
+        mroot = ET.parse(pom).getroot()
+        for profile, src_root in _HARNESSES:
+            src_dir = os.path.join(ROOT, mod, *src_root.split("/"))
+            has_sources = any(
+                fn.endswith(".java")
+                for _c, _d, files in os.walk(src_dir)
+                for fn in files
+            )
+            opted_in = (
+                mroot.findtext(f"m:properties/m:{profile}.skip", namespaces=ns) or ""
+            ).strip() == "false"
+            if has_sources and not opted_in:
+                fail(name, f"{mod} owns {src_root} sources but does not set "
+                           f"<{profile}.skip>false</{profile}.skip>, so `-P{profile}` compiles them "
+                           f"and never runs them")
+            if opted_in and not has_sources:
+                fail(name, f"{mod} sets <{profile}.skip>false</{profile}.skip> but owns no "
+                           f"{src_root} sources — the runner will fail on an empty test list")
+
+
 CHECKS = [
     check_version_lockstep,
     check_adr_index,
@@ -579,6 +643,7 @@ CHECKS = [
     check_posture,
     check_jpms,
     check_enforcer,
+    check_harness_opt_in,
 ]
 
 

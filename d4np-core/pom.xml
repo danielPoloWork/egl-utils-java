@@ -19,6 +19,18 @@
   <name>Core</name>
   <description>Zero third-party dependencies: creational and structural patterns, the ADR-002 error model, validation, monitoring and conversion helpers.</description>
 
+  <!-- ITEM 1.8 / ADR-0007: this module OWNS harness sources (src/bench/java, src/jcstress/java), so
+       it opts the runners in. The parent defaults both switches to `true` (skip) because JMH and
+       jcstress both exit non-zero when handed an empty test list, and the other eight modules have
+       nothing to measure yet. The switch and the sources are checked against each other by
+       consistency_lint.py's `harness-opt-in`, so a module cannot own benchmarks that never run —
+       which is the defect this whole item exists to remove. Milestone 5 flips these in
+       d4np-concurrent for NFR-02/NFR-05; nothing else is needed there. -->
+  <properties>
+    <jmh.skip>false</jmh.skip>
+    <jcstress.skip>false</jcstress.skip>
+  </properties>
+
   <!-- ITEM 1.7 / NFR-08: "core has ZERO third-party dependencies (jakarta.validation-api as
        provided)". Written as an ALLOWLIST (default-deny) rather than a list of banned frameworks,
        because the contract is "nothing", not "not Spring, Jackson or Redisson" — a ban list would
