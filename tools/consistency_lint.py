@@ -826,6 +826,83 @@ def check_static_analysis():
                    "<failOnWarning>true</failOnWarning> on maven-compiler-plugin")
 
 
+# ---------------------------------------------------------------------------
+# 13. One specification authority (ITEM 1.12 / ADR-0010)
+# ---------------------------------------------------------------------------
+# Two documents described the same product and neither was subordinate to the other: the imported
+# v2.0 draft in .spec/ and the rendered docs/specs/ spec. ROADMAP's own traceability section named the
+# DRAFT as the FR/NFR id source — and the draft contains no FR- ids at all (measured: 0 FR, 6 NFR),
+# because that vocabulary was minted during intake. ADR-0010 settles the ladder: an RFC outranks the
+# spec where it pins a contract; the manifest's `spec.*` block is the source of record; the rendered
+# spec is its authoritative published VIEW; the imported draft is superseded provenance.
+#
+# This check makes the ladder mechanical instead of prose:
+#
+#   * the manifest and the rendered spec carry the SAME FR/NFR ids, with the same requirement text —
+#     the spec is generated from the manifest, so a hand-edit of the generated file is a divergence
+#     that the next re-render silently reverts (risk R-07, which already cost item 1.4's work once);
+#   * every FR/NFR id cited in ROADMAP.md exists in the manifest, so a roadmap item cannot invent a
+#     requirement (or carry a typo) that no specification states;
+#   * the superseded draft still says it is superseded, so the archive cannot quietly become a rival
+#     source again.
+_SPEC_VIEW = ("docs", "specs", "01_spec_utils.md")
+_SPEC_DRAFT = (".spec", "d4np-java.md")
+_SUPERSEDED_MARKER = "SUPERSEDED"
+
+
+def _req_lines(text, prefix):
+    """Requirement lines keyed by id, from either the manifest (quoted) or the rendered spec (bullet)."""
+    out = {}
+    for m in re.finditer(rf'^\s*-\s*"?({prefix}-\d+)\s+([^"\n]+?)"?\s*$', text, re.MULTILINE):
+        out.setdefault(m.group(1), m.group(2).strip())
+    return out
+
+
+def check_spec_authority():
+    name = "spec-authority"
+    if not exists("orchestrator/project.yaml") or not exists("/".join(_SPEC_VIEW)):
+        return
+    manifest = read("orchestrator", "project.yaml")
+    view = read(*_SPEC_VIEW)
+
+    for prefix in ("FR", "NFR"):
+        src, pub = _req_lines(manifest, prefix), _req_lines(view, prefix)
+        if not src:
+            fail(name, f"orchestrator/project.yaml declares no {prefix}-NN requirement lines, so the "
+                       f"rendered spec has no source of record (ADR-0010 rung 2)")
+            continue
+        missing = sorted(set(src) - set(pub))
+        extra = sorted(set(pub) - set(src))
+        if missing:
+            fail(name, f"{prefix} id(s) in the manifest but not in {'/'.join(_SPEC_VIEW)}: {missing} — "
+                       f"the published spec is stale; re-render it from the manifest")
+        if extra:
+            fail(name, f"{prefix} id(s) in {'/'.join(_SPEC_VIEW)} but not in the manifest: {extra} — "
+                       f"the spec was hand-edited, and the next re-render will delete this (R-07)")
+        for rid in sorted(set(src) & set(pub)):
+            if src[rid] != pub[rid]:
+                fail(name, f"{rid} text differs between the manifest and the published spec — edit the "
+                           f"manifest and re-render, never the generated file")
+
+    # No roadmap item may cite a requirement the specification does not state.
+    if exists("ROADMAP.md"):
+        known = set(_req_lines(manifest, "FR")) | set(_req_lines(manifest, "NFR"))
+        cited = set(re.findall(r"\b(?:FR|NFR)-\d+\b", read("ROADMAP.md")))
+        dangling = sorted(cited - known)
+        if dangling:
+            fail(name, f"ROADMAP.md cites requirement id(s) that no specification states: {dangling}")
+
+    # The superseded draft must keep saying so.
+    if exists("/".join(_SPEC_DRAFT)):
+        draft = read(*_SPEC_DRAFT)
+        if _SUPERSEDED_MARKER not in draft:
+            fail(name, f"{'/'.join(_SPEC_DRAFT)} no longer carries its {_SUPERSEDED_MARKER} banner, so "
+                       f"the intake draft reads as a live specification again (ADR-0010 rung 3)")
+        if re.search(r"\bFR-\d+\b", draft):
+            fail(name, f"{'/'.join(_SPEC_DRAFT)} now contains FR- ids — the superseded draft is being "
+                       f"maintained as a rival requirement source (ADR-0010 rejected exactly that)")
+
+
 CHECKS = [
     check_version_lockstep,
     check_adr_index,
@@ -839,6 +916,7 @@ CHECKS = [
     check_enforcer,
     check_harness_opt_in,
     check_static_analysis,
+    check_spec_authority,
 ]
 
 

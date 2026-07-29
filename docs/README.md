@@ -20,7 +20,7 @@ conversational context and scratch notes do not live here.
 | `docs/releases/` | Per-version release notes (one file per release; index of all of them). |
 | `docs/benchmarks/` | Reproducible performance methodology + results, backing every performance claim. |
 | `docs/rfc/` | Design RFCs — contracts pinned before the code they govern is written. |
-| `.spec/` (repo root) | **Intake area, not a second docs system:** the imported specification draft (`d4np-java.md`, v2.0, 2026-07-14) and the four pre-governance ADRs `ADR-001`…`ADR-004`, which are still binding and are indexed from [`adr/README.md`](adr/README.md). See [ADR-0008](adr/0008-index-the-pre-governance-adrs-in-place.md); which spec document is authoritative is ROADMAP item 1.12. |
+| `.spec/` (repo root) | **Intake archive, not a second docs system:** the **superseded** specification draft (`d4np-java.md`, v2.0, 2026-07-14 — provenance only, and it holds no `FR-` ids) plus the four pre-governance ADRs `ADR-001`…`ADR-004`, which *are* still binding and are indexed from [`adr/README.md`](adr/README.md). See [ADR-0008](adr/0008-index-the-pre-governance-adrs-in-place.md) and [ADR-0010](adr/0010-single-specification-authority.md). |
 
 
 ## Reading order for newcomers

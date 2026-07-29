@@ -18,8 +18,8 @@ taking a framework. Framework independence is a build property enforced in CI, n
 
 ## 2. Functional Requirements
 
-- FR-01 GenericFactory<T,K>: generic keyed factory. [GAP] no contract stated — unknown-key behavior, duplicate registration, and thread safety are undefined (item 4 got this treatment; item 1 did not).
-- FR-02 FluentBuilder<T>: base for fluent domain-object builders. [GAP] no contract stated — required-field enforcement, build() validation, and reuse-after-build are undefined.
+- FR-01 GenericFactory<T,K>: generic keyed factory. [GAP] no contract stated — unknown-key behavior, duplicate registration, and thread safety are undefined (item 4 got this treatment; item 1 did not). [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]
+- FR-02 FluentBuilder<T>: base for fluent domain-object builders. [GAP] no contract stated — required-field enforcement, build() validation, and reuse-after-build are undefined. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]
 - FR-03 Lazy<T>: thread-safe lazy initialization via double-checked volatile; initializer runs at most once; exceptions memoized-or-retried per option; initializer returning null raises IllegalStateException; safe publication jcstress-verified (NFR-01).
 - FR-04 StrategyRegistry<K,S>: Optional<S> find(K) for the missing-key case; S getOrThrow(K) throws StrategyNotFoundException carrying the known-keys list; ConcurrentHashMap-backed lock-free reads (NFR-04); register is last-write-wins with a warning log.
 - FR-05 SimpleJdbcExecutor: try-with-resources lifecycle, POJO row mapping, PARAMETERIZED STATEMENTS ONLY — no string-concatenation overload exists, making PreparedStatement the enforced SQL-injection defense.
@@ -39,9 +39,9 @@ taking a framework. Framework independence is a build property enforced in CI, n
 - FR-19 GlobalExceptionHandler: Spring MVC advice mapping exceptions to RFC 7807 application/problem+json; lives in the Spring adapter module; normative mapping table — BusinessException -> 422, validation -> 400, StrategyNotFoundException -> 500 + alert, fallback -> 500.
 - FR-20 JsonMapper: pre-configured Jackson (JavaTimeModule, FAIL_ON_UNKNOWN_PROPERTIES=false, NO default typing — the polymorphic-deserialization CVE class is configured away); isolated in the json module so Jackson stays optional for core consumers.
 - FR-21 ObjectMapperExtensions: deep-conversion and partial-mapping helpers. [GAP] operation list, null-vs-absent semantics, and collection/generic handling are unspecified.
-- FR-22 StringCaseConverter: camelCase / snake_case / kebab-case conversion. [GAP] edge cases undefined — acronym runs (HTTPServer), embedded digits, and non-ASCII input need pinned table-driven expectations.
-- FR-23 ObjectUtils: null-safe comparison and validation helpers. [GAP] the helper set is not enumerated, so there is nothing specific to test.
-- FR-24 ResourceLoaderUtils: classpath resource loading. [GAP] behavior across exploded-directory vs JAR vs JPMS-encapsulated resources, and the missing-resource contract, are unspecified.
+- FR-22 StringCaseConverter: camelCase / snake_case / kebab-case conversion. [GAP] edge cases undefined — acronym runs (HTTPServer), embedded digits, and non-ASCII input need pinned table-driven expectations. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]
+- FR-23 ObjectUtils: null-safe comparison and validation helpers. [GAP] the helper set is not enumerated, so there is nothing specific to test. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]
+- FR-24 ResourceLoaderUtils: classpath resource loading. [GAP] behavior across exploded-directory vs JAR vs JPMS-encapsulated resources, and the missing-resource contract, are unspecified. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]
 - FR-25 ReflectionUtils: TEST-SCOPED reflection helpers in the test module; on JDK 9+ setAccessible against a non-opened module throws InaccessibleObjectException, so the module documents required --add-opens test JVM args and the helpers fail with an actionable message when absent; production code importing the test module fails the CI dependency check.
 
 
