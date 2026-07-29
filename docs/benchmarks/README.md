@@ -23,6 +23,11 @@ One report per measured scenario, from [`template.md`](template.md). Keep the in
 
 | Date | Scenario | Version | Headline result | Report |
 |------|----------|---------|-----------------|--------|
-| —    | —        | —       | —               | —      |
+| 2026-07-29 | Publication baseline — volatile vs. final field read | v0.0.0 | 0.4–0.6 ns/op on both toolchains, so NFR-01's 2 ns/op budget has 3–4x headroom over its floor (**informational**, 1 fork x 1 iteration) | [report](2026-07-29-publication-baseline.md) |
 
-_No benchmarks recorded yet._
+Harnesses live under `<module>/src/bench/java/` and run via `mvn -B -Pjmh verify`; the jcstress
+counterpart for thread-safety claims is `mvn -B -Pjcstress verify` over
+`<module>/src/jcstress/java/`. Both are profile-gated test-scope roots — see
+[ADR-0007](../adr/0007-nfr-harnesses-as-test-scope-profiles.md) and
+[`../development/local-build.md`](../development/local-build.md) for the settings that separate a
+PR-grade run from a publication-grade one.

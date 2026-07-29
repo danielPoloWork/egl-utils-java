@@ -34,12 +34,44 @@ mvn -B spotless:apply -pl '!d4np-bom'
 # Lint — no exclusion needed, clean on all ten modules
 mvn -B checkstyle:check
 
-# Benchmark
+# Benchmark (JMH) and concurrency stress (jcstress) — see "The NFR harnesses" below
 mvn -B -Pjmh verify
+mvn -B -Pjcstress verify
 
 # Cross-artifact congruence (run before drafting any PR)
 python tools/consistency_lint.py
 ```
+
+## The NFR harnesses
+
+Two profiles, both real since item 1.8 — before that CI invoked them and Maven only *warned* that
+they did not exist, so the performance and concurrency gates passed having measured nothing. The
+design and the alternatives are in
+[ADR-0007](../adr/0007-nfr-harnesses-as-test-scope-profiles.md); what you need to work with them:
+
+- **Where the code goes.** `<module>/src/bench/java/…` for JMH, `<module>/src/jcstress/java/…` for
+  jcstress. Both are compiled as **test** source roots and only when the matching profile is active,
+  so `jmh-core` and `jcstress-core` stay out of every published JAR.
+- **Opt in, or it never runs.** The parent defaults `jmh.skip`/`jcstress.skip` to `true`. A module
+  that owns harness sources sets the switch to `false` in its own `<properties>` — `d4np-core` does.
+  `consistency_lint.py`'s `harness-opt-in` fails the build if the sources and the switch disagree
+  either way, because both tools exit non-zero on an empty test list and neither says why.
+- **CI settings are PR-grade, not publication-grade.** One fork, one warmup and one measurement
+  iteration, `-m sanity`. For a number that backs an NFR, use the reference machine and override:
+
+  ```bash
+  mvn -B -Pjmh verify -Djmh.forks=5 -Djmh.warmup.iterations=10 -Djmh.iterations=10
+  mvn -B -Pjcstress verify -Djcstress.mode=default
+  ```
+
+- **Results.** `<module>/target/jmh-result.json` (machine-readable, for item 8.3) and
+  `<module>/target/jcstress-results/index.html`. Record anything you intend to cite under
+  [`../benchmarks/`](../benchmarks/).
+- **Keep jcstress annotation strings ASCII.** The generated `META-INF/TestList` counts string lengths
+  in characters and reads them as bytes, so a single em dash desynchronises the file and the run dies
+  with `NumberFormatException: For input string: ""` — a message that points at nothing you wrote.
+- **A plain `mvn verify` does not compile the harnesses.** Run the profile before pushing; the six
+  build cells will not catch a harness that stopped compiling.
 
 ## Why Spotless skips the BOM
 
