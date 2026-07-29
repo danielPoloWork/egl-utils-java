@@ -150,8 +150,40 @@ def check_version_lockstep():
 
 
 # ---------------------------------------------------------------------------
-# 2. ADR index bijection + sequential numbering
+# 2. ADR index bijection + sequential numbering + status congruence (both schemes)
 # ---------------------------------------------------------------------------
+# ITEM 1.10 / ADR-0008 extends this check in two directions.
+#
+# THE IMPORTED SET. This project's decisions were taken under two regimes, so ids come in two shapes:
+# four-digit ids are records written under docs/adr/, three-digit ids are the four pre-governance
+# decisions of 2026-07-14 that live in .spec/adr/ and are still binding (every module POM cites
+# ADR-001). Item 1.10 chose to index those in place rather than renumber them — 183 references in 45
+# files, plus a git history that cites the ids verbatim — so the index, not the directory, is what
+# makes the record complete. This check is therefore what keeps that decision honest: without it the
+# imported four are indexed by prose alone, and docs/adr/README.md is a GENERATED file whose renderer
+# emits only the 0001/0002 rows, so a re-render silently shrinks the record back (risk R-07).
+#
+# STATUS CONGRUENCE, for both schemes. The check previously verified presence and numbering only, so
+# an ADR marked `Superseded` in its own header could sit in the index as `Accepted` indefinitely —
+# ADR-0002 is the live case. Only the leading clause is compared: the index says "Superseded by
+# ADR-0003" where the record says "Superseded by [ADR-0003](0003-….md) (2026-07-27)", and demanding
+# character equality there would force the index to restate provenance it has no room for.
+_IMPORTED_ADR_DIR = (".spec", "adr")
+_IMPORTED_ADR_RE = re.compile(r"d4np_java_adr_(\d{3})_[a-z0-9_]+\.md")
+
+
+def _status_head(text):
+    """Normalise a status to its leading clause: 'Accepted', 'Superseded by ADR-0003', …
+
+    Markdown links are flattened to their label so `[ADR-0003](0003-….md)` compares equal to
+    `ADR-0003`, and anything after an em dash, a parenthesis or a comma is provenance rather than
+    status ("Accepted — drafted by the agent, accepted by the owner on 2026-07-26").
+    """
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.split(r"[—(,]", text)[0]
+    return " ".join(text.split()).rstrip(".").lower()
+
+
 def check_adr_index():
     name = "adr-index"
     adr_dir = os.path.join(ROOT, "docs", "adr")
@@ -163,9 +195,49 @@ def check_adr_index():
         fail(name, "no ADR files found (expected at least 0001 and 0002)")
         return
     index = read("docs", "adr", "README.md")
+    # filename -> status cell. The two index tables differ in shape — a governed row carries its link
+    # in the id cell, an imported row carries it in the "Record" cell and has five columns — so the
+    # status cell is located by CONTENT (the first cell that reads as a status) rather than by
+    # position, and the filename is taken from the link that identifies the row. Matching the id cell
+    # for governed rows specifically matters: an imported row also links to the ADR that carried its
+    # decision forward, and keying on every link in the row would let one row answer for another.
+    governed_rows, imported_rows = {}, {}
+    for row in re.findall(r"^\|.*\|$", index, re.MULTILINE):
+        cells = [c.strip() for c in row.strip().strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        status = next(
+            (
+                c
+                for c in cells
+                if _status_head(c).startswith(("accepted", "superseded", "proposed", "deprecated"))
+            ),
+            None,
+        )
+        if status is None:
+            continue
+        id_link = re.search(r"\]\((\d{4}-[a-z0-9-]+\.md)\)", cells[0])
+        if id_link:
+            governed_rows[id_link.group(1)] = status
+        for target in re.findall(r"\]\(([^)]+)\)", row):
+            m = _IMPORTED_ADR_RE.search(target)
+            if m:
+                imported_rows[m.group(0)] = status
+
     for fn in files:
         if fn[:-3] not in index:
             fail(name, f"ADR '{fn[:-3]}' is not listed in docs/adr/README.md")
+            continue
+        body = read("docs", "adr", fn)
+        fm = re.search(r"^-\s+\*\*Status:\*\*\s*(.+)$", body, re.MULTILINE)
+        if fm is None:
+            fail(name, f"{fn}: no '- **Status:** …' line to compare against the index")
+        elif fn not in governed_rows:
+            fail(name, f"{fn}: appears in docs/adr/README.md but not as an indexed row with a "
+                       f"status cell")
+        elif _status_head(governed_rows[fn]) != _status_head(fm.group(1)):
+            fail(name, f"{fn}: index says status '{governed_rows[fn]}' but the record says "
+                       f"'{fm.group(1).strip()}'")
     nums = [int(fn[:4]) for fn in files]
     for i, n in enumerate(nums, start=1):
         if n != i:
@@ -174,6 +246,47 @@ def check_adr_index():
     for num in re.findall(r"\]\((\d{4}-[a-z0-9-]+\.md)\)", index):
         if not os.path.exists(os.path.join(adr_dir, num)):
             fail(name, f"index links missing ADR file '{num}'")
+
+    # --- the imported (three-digit) series ---------------------------------
+    imported_dir = os.path.join(ROOT, *_IMPORTED_ADR_DIR)
+    if not os.path.isdir(imported_dir):
+        return  # a checkout without the intake area is not a congruence failure
+    imported = sorted(fn for fn in os.listdir(imported_dir) if _IMPORTED_ADR_RE.fullmatch(fn))
+    if not imported:
+        fail(name, ".spec/adr/ exists but holds no d4np_java_adr_NNN_*.md record")
+        return
+    rel_prefix = "/".join(_IMPORTED_ADR_DIR)
+    for fn in imported:
+        num = _IMPORTED_ADR_RE.fullmatch(fn).group(1)
+        if fn not in index:
+            fail(name, f"imported ADR-{num} ({rel_prefix}/{fn}) is not listed in "
+                       f"docs/adr/README.md — it is binding and cited from the POMs, so an index "
+                       f"without it under-reports the record (ADR-0008)")
+            continue
+        body = read(*_IMPORTED_ADR_DIR, fn)
+        tm = re.search(r"^#\s*ADR-(\d{3}):", body, re.MULTILINE)
+        if tm is None:
+            fail(name, f"{rel_prefix}/{fn}: no '# ADR-NNN: …' title to derive the id from")
+        elif tm.group(1) != num:
+            fail(name, f"{rel_prefix}/{fn}: title says ADR-{tm.group(1)} but the filename says "
+                       f"{num}")
+        sm = re.search(r"^\|\s*\*\*Status\*\*\s*\|\s*(.+?)\s*\|", body, re.MULTILINE)
+        if sm is None:
+            fail(name, f"{rel_prefix}/{fn}: no '| **Status** | … |' row to compare against the index")
+        elif fn not in imported_rows:
+            fail(name, f"{rel_prefix}/{fn}: linked from docs/adr/README.md but not from an indexed "
+                       f"row carrying a status cell")
+        elif _status_head(imported_rows[fn]) != _status_head(sm.group(1)):
+            fail(name, f"{rel_prefix}/{fn}: index says status '{imported_rows[fn]}' but the record "
+                       f"says '{sm.group(1)}'")
+    inums = [int(_IMPORTED_ADR_RE.fullmatch(fn).group(1)) for fn in imported]
+    for i, n in enumerate(inums, start=1):
+        if n != i:
+            fail(name, f"imported ADR numbering gap/dup: expected {i:03d}, found {n:03d}")
+            break
+    for target in re.findall(r"\]\(([^)]+d4np_java_adr_\d{3}_[a-z0-9_]+\.md)\)", index):
+        if not os.path.exists(os.path.normpath(os.path.join(adr_dir, target))):
+            fail(name, f"index links missing imported ADR file '{target}'")
 
 
 # ---------------------------------------------------------------------------

@@ -205,6 +205,13 @@ Documentation is part of the deliverable. Every PR ships its own doc updates.
   Open one when a choice affects the public API/compatibility, when two reasonable options
   exist and the rationale is non-obvious, **when a design pattern is adopted** (§8), or when
   superseding a prior ADR. Template: [`docs/adr/template.md`](docs/adr/template.md).
+  **Two id shapes exist and the digit count is semantic:** four digits (`ADR-0001`) is a record under
+  `docs/adr/`; three digits (`ADR-001`) is one of the four pre-governance decisions in `.spec/adr/`,
+  still binding and cited from every module POM. `ADR-001` and `ADR-0001` are *different decisions*.
+  The three-digit series is **closed** — new work always takes the next four-digit number, claimed
+  when it lands, never reserved in advance. Both series are indexed in
+  [`docs/adr/README.md`](docs/adr/README.md) and the index is enforced by
+  `consistency_lint.py`; the reasoning is [ADR-0008](docs/adr/0008-index-the-pre-governance-adrs-in-place.md).
 - **ROADMAP.md** — numbered, checkbox-driven plan. Flip the checkbox in the same PR that
   completes the item. New work goes at the bottom of the relevant section with a fresh
   number. A genuinely new capability is planned first — usually as a new milestone.
