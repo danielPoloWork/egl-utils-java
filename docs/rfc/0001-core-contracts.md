@@ -327,6 +327,11 @@ the whole point of authoring it before Milestone 1 item 1.1 establishes the reac
   the tables above. `.spec/d4np-java.md` is an imported v2.0 draft; back-porting these contracts into
   it (or marking it superseded by this RFC) is a separate change and needs the owner's call on which
   document is authoritative going forward.
+  **RESOLVED 2026-07-29 by ROADMAP item 1.12 / [ADR-0010](../adr/0010-single-specification-authority.md):**
+  the imported draft is superseded provenance and carries a banner saying so; the manifest's `spec.*`
+  block is the source of record, published as [`../specs/01_spec_utils.md`](../specs/01_spec_utils.md);
+  and an RFC outranks the specification wherever it pins a contract — so the five requirement lines
+  this RFC pins now point here rather than restating a contract they no longer define.
 - Milestone 8 item 8.3 owns the NFR-01/NFR-06 perf-gate reproducibility problem noted above.
 - Milestone 3 item 3.3 owns FR-16 `AuditLog` redaction; Milestone 4 owns FR-21
   `ObjectMapperExtensions` (`d4np-json`, out of core).

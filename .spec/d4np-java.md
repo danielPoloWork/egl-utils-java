@@ -1,10 +1,21 @@
 # Software Specification: d4np-java (Java Enterprise Architecture Library)
 
+> **SUPERSEDED — this is intake provenance, not the live specification.** As of 2026-07-29
+> (ROADMAP item 1.12, [ADR-0010](../docs/adr/0010-single-specification-authority.md)) the
+> authoritative requirement set is [`docs/specs/01_spec_utils.md`](../docs/specs/01_spec_utils.md),
+> rendered from `orchestrator/project.yaml` → `spec.*`, and an RFC under
+> [`docs/rfc/`](../docs/rfc/) outranks both wherever it pins a contract. This document is kept
+> unedited below the banner because it is the record of what was reviewed and accepted on 2026-07-14,
+> and because the four ADRs it cites are still binding — they are indexed from
+> [`docs/adr/README.md`](../docs/adr/README.md). **Do not cite it as a requirement source:** it
+> numbers requirements as "items 1–25" and contains no `FR-` ids at all, so the FR/NFR vocabulary the
+> rest of the repository uses cannot be resolved here.
+
 | | |
 |---|---|
 | **Version** | 2.0 (addresses spec-review issue #9) |
 | **Date** | 2026-07-14 |
-| **Status** | Reviewed draft |
+| **Status** | Reviewed draft — **superseded 2026-07-29**, see the banner above |
 | **ADRs** | [ADR-001: Module split & dependency policy](adr/d4np_java_adr_001_module_split.md) · [ADR-002: Error model](adr/d4np_java_adr_002_error_model.md) · [ADR-003: JWT library](adr/d4np_java_adr_003_jwt_library.md) · [ADR-004: Generated repository layout](adr/d4np_java_adr_004_generated_layout.md) |
 
 ## 1. Description & Design Philosophy
