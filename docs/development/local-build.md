@@ -42,6 +42,34 @@ mvn -B -Pjcstress verify
 python tools/consistency_lint.py
 ```
 
+## Static analysis: ErrorProne + NullAway need JDK 21
+
+Since item 1.11 the analyzers are bound to **compilation itself** — there is no separate command, and
+no `-P` flag to remember. Design and alternatives:
+[ADR-0009](../adr/0009-errorprone-nullaway-on-jdk-21-cells.md). What you need to know:
+
+- **They run on JDK 21+ only, automatically.** ErrorProne 2.43.0 onward is compiled to class-file 65,
+  so it cannot load on JDK 17 at all; the `errorprone` profile self-activates on `<jdk>[21,)</jdk>`.
+  **Build on 21 before you push.** On a JDK-17 toolchain the compile succeeds with no analysis, and
+  the three JDK-21 CI cells will be the first thing to tell you otherwise.
+- **NullAway is an ERROR, not a warning**, over `AnnotatedPackages=it.d4np`. A null dereference or a
+  `null` passed where non-null is required fails the build.
+- **Warnings are errors on every cell** (`failOnWarning` on `maven-compiler-plugin`, JDK 17 included).
+  That is AGENTS.md §10's bar, now enforced rather than promised.
+- **Suppress narrowly or not at all.** `@SuppressWarnings("TheCheckName")` on the smallest element that
+  needs it, with a comment saying why. Never `-XepDisableAllChecks`, never a severity downgrade in the
+  POM — AGENTS.md §10 forbids broad disables, and a downgrade is invisible in review.
+- **Upgrade ErrorProne and NullAway as a PAIR.** NullAway compiles against ErrorProne's internal check
+  API. A mismatch fails with `ProvisionException: Failed to initialize com.uber.nullaway.NullAway`,
+  whose *cause* names the real problem — `NoClassDefFoundError` for a moved ErrorProne class means the
+  versions disagree; *"NullAway configuration is incorrect"* means an option is missing. Dependabot
+  offers them separately, so check both.
+- **Do not delete `.mvn/jvm.config`.** ErrorProne runs inside the compiler's JVM and needs its
+  `jdk.compiler` exports; without them compilation dies with `IllegalAccessError … module jdk.compiler
+  does not export com.sun.tools.javac.api`. See [`../../.mvn/README.md`](../../.mvn/README.md).
+- **Generated code is out of scope** (`-XepExcludedPaths` covers `target/generated-*-sources`), because
+  JMH's generated runners trip `ThreadPriorityCheck` and cannot be edited or annotated.
+
 ## The NFR harnesses
 
 Two profiles, both real since item 1.8 — before that CI invoked them and Maven only *warned* that

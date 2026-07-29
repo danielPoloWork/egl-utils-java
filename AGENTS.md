@@ -258,6 +258,10 @@ value. Therefore:
 - **Namespace / package:** `it.d4np.utils`.
 - **Formatting:** enforced by `Spotless (google-java-format)` (config at the repo root).
 - **Static analysis:** enforced by `ErrorProne + NullAway + Checkstyle; maven-enforcer for the ADR-001 dependency rules`; warnings-as-errors on the diff at CI.
+  ErrorProne + NullAway bind into compilation and run on **JDK 21+ toolchains only** — 2.43.0 onward
+  cannot load on JDK 17 — so build on 21 before pushing; `failOnWarning` applies on every platform.
+  Suppress narrowly (`@SuppressWarnings("CheckName")` with a reason), never with a broad disable.
+  See [ADR-0009](docs/adr/0009-errorprone-nullaway-on-jdk-21-cells.md).
 - **Documentation:** all public symbols documented with `Javadoc`-compatible comments.
 - **Errors:** the spec's error model is honored at every boundary; all error paths covered
   by tests.

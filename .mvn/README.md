@@ -30,8 +30,19 @@ reach them; without the flags `spotless:check` fails with `IllegalAccessError` o
 Because these flags target the Maven JVM, they cannot be expressed in `pom.xml` — which is
 why this file exists at all rather than the configuration living with the plugin.
 
-ROADMAP item 1.11 (ErrorProne + NullAway) needs the same export set, which is the other reason
-it is kept as a whole rather than trimmed to Spotless's exact minimum.
+ROADMAP item 1.11 (ErrorProne + NullAway) needs the same export set — **verified, no longer
+anticipated**: with this file moved aside, `mvn compile` on JDK 21 dies with
+
+```
+java.lang.IllegalAccessError: class com.google.errorprone.BaseErrorProneJavaCompiler
+  cannot access class com.sun.tools.javac.api.BasicJavacTask (in module jdk.compiler)
+  because module jdk.compiler does not export com.sun.tools.javac.api to unnamed module
+```
+
+ErrorProne runs in-process in the compiler's JVM, exactly like google-java-format, and the eight
+exports plus two opens already here are sufficient for both — item 1.11 added no flag. That is why the
+set is kept whole rather than trimmed to Spotless's exact minimum, and why deleting a line here breaks
+two gates at once (ADR-0009).
 
 ### Editing checklist
 

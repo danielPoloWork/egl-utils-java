@@ -745,6 +745,87 @@ def check_harness_opt_in():
                            f"{src_root} sources — the runner will fail on an empty test list")
 
 
+# ---------------------------------------------------------------------------
+# 12. The claimed static analysis is actually wired (ITEM 1.11)
+# ---------------------------------------------------------------------------
+# AGENTS.md §9/§10, the rendered spec, the PR template and the CI job title have all named
+# "ErrorProne + NullAway" and "warnings-as-errors" since the scaffold, while the POM configured
+# neither — the toolchain description was a claim about a build that did not make it. This check
+# closes that gap in BOTH directions: a claim must be backed by configuration, and configuration
+# must be reflected in the claim, so neither side can drift out on its own.
+#
+# What is asserted is the part that can fail SILENTLY. The three javac flags ErrorProne needs on
+# JDK 21+ and the generated-sources exclusion are deliberately not checked here: dropping any of them
+# fails the build immediately and by name (verified — "The default compilation policy (by-todo) is
+# not supported by Error Prone", "-XDaddTypeAnnotationsToSymbol=true is required by Error Prone on
+# JDK 21", and 12 ThreadPriorityCheck findings in JMH-generated code). A loud failure needs no lint.
+# Severity and warnings-as-errors are the opposite case: demote NullAway to WARNING, or delete
+# failOnWarning, and every finding still prints while the build turns green.
+_CLAIM_KEYS = ("linter", "sanitizers")
+
+
+def _strip_xml_comments(text):
+    """Drop XML comments before the POM is matched for configuration.
+
+    Not defensive: the first draft of this check read `AnnotatedPackages` out of the very comment
+    that EXPLAINS the option, so deleting the option left the check green. The parent POM documents
+    every knob it sets, which makes prose-matching a systematic false negative here rather than an
+    edge case.
+    """
+    return re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+
+
+def check_static_analysis():
+    name = "static-analysis-wired"
+    if not exists("pom.xml") or not exists("orchestrator/project.yaml"):
+        return
+    pom = _strip_xml_comments(read("pom.xml"))
+    manifest = read("orchestrator", "project.yaml")
+    claims = " ".join(
+        m.group(1)
+        for key in _CLAIM_KEYS
+        for m in re.finditer(rf'^\s*{key}:\s*"([^"]*)"', manifest, re.MULTILINE)
+    )
+    for tool, claimed, wired, evidence in (
+        (
+            "ErrorProne",
+            "ErrorProne" in claims,
+            "-Xplugin:ErrorProne" in pom
+            and "<artifactId>error_prone_core</artifactId>" in pom,
+            "`-Xplugin:ErrorProne` plus an error_prone_core annotationProcessorPath",
+        ),
+        (
+            "NullAway",
+            "NullAway" in claims,
+            "<artifactId>nullaway</artifactId>" in pom and "-Xep:NullAway:" in pom,
+            "a nullaway annotationProcessorPath and its -Xep options",
+        ),
+    ):
+        if claimed and not wired:
+            fail(name, f"orchestrator/project.yaml claims {tool} in its toolchain description, but "
+                       f"pom.xml does not configure it ({evidence} is missing) — the claim is then a "
+                       f"review promise, which is what item 1.11 removed")
+        if wired and not claimed:
+            fail(name, f"pom.xml configures {tool} but the manifest's toolchain description no "
+                       f"longer names it, so the generated docs under-report the quality bar")
+
+    if "<artifactId>nullaway</artifactId>" in pom:
+        if "-Xep:NullAway:ERROR" not in pom:
+            fail(name, "NullAway is wired but not promoted to ERROR — at WARNING severity a "
+                       "nullability finding prints and the build still passes")
+        if (
+            "-XepOpt:NullAway:AnnotatedPackages=" not in pom
+            and "-XepOpt:NullAway:OnlyNullMarked" not in pom
+        ):
+            fail(name, "NullAway is wired with neither AnnotatedPackages nor OnlyNullMarked, so it "
+                       "has no code to consider annotated")
+
+    agents = read("AGENTS.md") if exists("AGENTS.md") else ""
+    if "warnings-as-errors" in agents and "<failOnWarning>true</failOnWarning>" not in pom:
+        fail(name, "AGENTS.md promises warnings-as-errors but pom.xml does not set "
+                   "<failOnWarning>true</failOnWarning> on maven-compiler-plugin")
+
+
 CHECKS = [
     check_version_lockstep,
     check_adr_index,
@@ -757,6 +838,7 @@ CHECKS = [
     check_jpms,
     check_enforcer,
     check_harness_opt_in,
+    check_static_analysis,
 ]
 
 
