@@ -649,6 +649,62 @@
                     <argument>org.openjdk.jcstress.Main</argument>
                     <argument>-m</argument>
                     <argument>${jcstress.mode}</argument>
+                    <!-- ITEM 2.1. RESTORES A CAPABILITY jcstress SILENTLY LOSES HERE, and the loss
+                         was self-inflicted by a class name the specification mandates.
+
+                         jcstress probes the target VM for `@Contended` support ("Testing @Contended
+                         works on all results and infra objects") and adds `-XX:-RestrictContended`
+                         to the forked test VMs only if the probe exits 0. That probe is
+                         `ContendedTestMain`, which calls `Reflections.getClasses("Result")` to find
+                         its own result classes — and `Reflections` derives class names from
+                         `java.class.path` by string-replacing path separators with dots. For a JAR
+                         entry it reads `JarEntry.getName()` and gets a real name; for a DIRECTORY
+                         entry it passes `File.toString()` straight through, so `target/classes`
+                         yields `E:.repository.….it.d4np.utils.Result$Err` and `Class.forName` throws.
+                         Anything whose path contains "Result" is enough — verified: FR-17's
+                         `Result`/`Result$Ok`/`Result$Err` in target/classes AND `ResultTest` in
+                         target/test-classes both match. Upstream never hits it because jcstress runs
+                         its own suite from a shaded JAR.
+
+                         Measured, not assumed: at v0.1.0 the probe printed `[OK]`; with item 2.1's
+                         types it prints `[N/A]` plus an `Exception in thread "main"` stack trace, and
+                         the forked VMs lose the flag — so `@Contended` padding stops taking effect,
+                         false sharing between the result and state objects is no longer prevented,
+                         and every jcstress test in this repo gets quietly LESS likely to observe the
+                         interleaving it exists to forbid. A gate that weakens while staying green is
+                         the exact failure class items 1.3, 1.7, 1.8 and 8.2 each recorded.
+
+                         AND THE LOSS IS INVISIBLE IN THE LOG, which is why it is worth this much
+                         comment. jcstress echoes only each configuration's *variable* flags in its
+                         per-configuration `[OK] [flags]` lines; auto-detected global args are applied
+                         without being printed. Diffing a v0.1.0 run against this one shows the SAME
+                         two brackets (`[]` and `[Stress…]`) whether the probe passed or failed, so the
+                         only signal is the `[N/A]` line itself. Supplied through `-jvmArgsPrepend` the
+                         flag lands in each configuration's list instead, so it is now visible in the
+                         log as well as in effect.
+
+                         (This comment was itself rejected once by the XML parser: a comment may not
+                         contain two consecutive dashes, so jcstress's own line prefix cannot be quoted
+                         verbatim here. Third instance in this repo of a config format that will not
+                         carry the comment explaining it, after `.mvn/jvm.config` and `.gitignore` in
+                         item 1.4.)
+
+                         `-jvmArgsPrepend` and not `-jvmArgs`: the latter "disables JVM flags
+                         auto-detection, and runs only the single JVM mode" (its own help text), which
+                         would collapse the 14-configuration matrix into one and cost far more
+                         sensitivity than it restored. Prepend keeps auto-detection and simply puts
+                         back the one flag the broken probe cannot.
+
+                         Not made a property on purpose: this is a workaround for an upstream defect,
+                         not a tuning knob, and a knob invites being blanked by someone who does not
+                         know why it is here. `-XX:-RestrictContended` is diagnostic, hence the unlock
+                         flag ahead of it; both are accepted by Temurin 17.0.20+8 and 21.0.12+8
+                         (verified). If a future JDK removes `RestrictContended` — as it removed
+                         `UseBiasedLocking`, which this same probe log still reports — every forked VM
+                         will fail to start with `Unrecognized VM option`, loudly and by name. Drop
+                         these two arguments then. -->
+                    <argument>-jvmArgsPrepend</argument>
+                    <argument>-XX:+UnlockDiagnosticVMOptions -XX:-RestrictContended</argument>
                     <argument>-r</argument>
                     <argument>${project.build.directory}/jcstress-results</argument>
                   </arguments>
