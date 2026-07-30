@@ -10,12 +10,21 @@
 **REQUIRED**, so this pass is mandatory, not optional. Findings feed
 [`risk-register.md`](risk-register.md).
 
-**Read this caveat first.** `src/` contains only `.gitkeep` — **no product code exists yet**.
-So almost every threat below is **design-stage**: the "mitigation" is a control the specification
-commits to, and `Status` says whether that control is *implemented* (it is not), *specified* (most),
+**Read this caveat first.** At the time of this pass `src/` contained only `.gitkeep` — **no product
+code existed**. So almost every threat below is **design-stage**: the "mitigation" is a control the
+specification commits to, and `Status` says whether that control is *implemented*, *specified* (most),
 or *unspecified* (a real gap). Calling a specified-but-unwritten control "mitigated" would be the
 single easiest lie in this document, so it is not made. The one boundary that is live today is the
 build and supply chain — and that is where every confirmed finding sits.
+
+> **Updated 2026-07-30 (ROADMAP item 2.1), and deliberately only where it had become false.** The
+> first product code has landed — `Result`, `ErrorDetail` and `BusinessException` in `d4np-core` — so
+> the "no product code exists" framing above is no longer true as written and is now past-tense. The
+> **analysis is unchanged**: no trust boundary moved, no new untrusted input or external service was
+> introduced, and no `Status` glyph was upgraded, because the B2 information-disclosure control is
+> enforced by FR-19's handler (item 7.1), not by the type that carries the message. This file is
+> **security-auditor-owned** and item 8.6 runs the next full STRIDE pass; the edit here is a factual
+> correction, not a re-analysis.
 
 A library's boundaries are not a service's: `egl-utils-java` has no network listener, no tenancy, no
 session. Its attack surface is **what a consuming application hands it**, plus **what it hands
@@ -77,7 +86,7 @@ Status: ▢ specified-not-implemented · ⚠ **gap** · ✅ implemented & verifi
 | Threat considered | Boundary / component | Mitigation / control | Status |
 |---|---|---|---|
 | Crypto internals or partial plaintext leaked through an exception | B1 · `AesEncryptor` | `CryptoException` **never** leaks `javax.crypto` internals or partial plaintext (spec §5, normative) | ▢ |
-| Server-side detail reaching the HTTP client via the error body | B2 · `GlobalExceptionHandler` (FR-19) | Normative mapping table; `ErrorDetail.message` is documented **caller-facing text that must not carry secrets, credentials or PII** (RFC-0001). `StrategyNotFoundException` → 500 + alert rather than echoing internals | ▢ |
+| Server-side detail reaching the HTTP client via the error body | B2 · `GlobalExceptionHandler` (FR-19) | Normative mapping table; `ErrorDetail.message` is documented **caller-facing text that must not carry secrets, credentials or PII** (RFC-0001) — that statement is now in the shipped `ErrorDetail`/`BusinessException` Javadoc rather than only in the RFC (item 2.1), and is registered as control **C-01**. Still ▢, because the control that *enforces* it is the FR-19 handler, which is item 7.1. `StrategyNotFoundException` → 500 + alert rather than echoing internals | ▢ |
 | Known-keys list in `StrategyNotFoundException` disclosing internal configuration to an end user | B1→B2 · `StrategyRegistry` (FR-04) | The keys list is **specified as part of the exception message** for debuggability. Safe only because FR-19 maps it to a **500 with no body detail**; if any adapter ever surfaces that message, it becomes disclosure. Recorded as a **standing coupling**, not a defect | ▢ |
 | IV reuse under a fixed key destroying GCM confidentiality | B1 · `AesEncryptor` | Unique random 96-bit IV per operation from `SecureRandom`; IV-uniqueness property test over 10⁷ operations (NFR-06) | ▢ |
 | Polymorphic-deserialization gadget chain (the Jackson CVE class) | B1 · `JsonMapper` (FR-20) | Default typing **off**; `FAIL_ON_UNKNOWN_PROPERTIES=false` limits shape coupling, not gadget exposure | ▢ |

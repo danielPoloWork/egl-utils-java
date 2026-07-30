@@ -13,8 +13,16 @@ At the close of a state-changing session, the agent:
 
 ## Index
 
-_No checkpoints yet._
-
 ### 2026
 
 _(newest first)_
+
+#### July
+
+- [2026-07-30 — the core error vocabulary (item 2.1)](2026/07/2026-07-30-core-error-vocabulary.md) —
+  `d4np-core` gets its first public API; ADR-0011 and ADR-0012; a jcstress regression found and fixed.
+
+> Milestone 1's twelve items (2026-07-26 → 2026-07-29) produced no checkpoints — the journal was
+> scaffolded and left empty. Their record lives in the `ROADMAP.md` item notes, the ADRs and
+> `docs/releases/v0.1.0.md`; it is **not** back-filled here, because a dated checkpoint written after
+> the fact would claim a trail that did not exist.

@@ -15,8 +15,9 @@ contract (the "congruence checks"):
      latest released changelog/release file (if any) agree;
   2. adr-index       — every docs/adr/NNNN-*.md is indexed and every indexed ADR exists,
      with sequential numbering and no gap;
-  3. patterns        — every Implemented/Planned catalogue row cites an existing ADR and an
-     existing code location under the source tree;
+  3. patterns        — every Implemented/Planned catalogue row cites an existing ADR (either
+     numbering scheme, ADR-0008) and an existing production source file under a reactor
+     module's src/main/;
   4. spec-map        — the ROADMAP Spec Coverage Map has no dangling row;
   5. milestones      — README ↔ ROADMAP milestone-completion state is consistent and no
      checkbox is malformed;
@@ -292,6 +293,29 @@ def check_adr_index():
 # ---------------------------------------------------------------------------
 # 3. Catalogued patterns -> ADR + code location (tolerant of an empty catalogue)
 # ---------------------------------------------------------------------------
+# ITEM 2.1 widened BOTH link vocabularies, because both were unsatisfiable in this repository and the
+# first catalogue row to cite anything real is what exposed it. Until now every row read `_TBD_` /
+# `_spec (intake)_` and carried `| — |` in its id column, so nothing was ever checked.
+#
+#   * ADR link — the rendered check accepted only `adr/NNNN-*.md`, the four-digit governed series.
+#     The pattern this item lands, Result / Either, was decided by **ADR-002**: one of the four
+#     pre-governance records that ADR-0008 deliberately KEPT in `.spec/adr/` under three-digit ids
+#     rather than renumbering. Under the old regex the only way to pass was to cite an ADR that did
+#     not make the decision — the check would have enforced a false citation.
+#   * Code location — it accepted only a repo-root-relative `src/...` path, which ADR-0003's reactor
+#     made unreachable: production code lives at `<module>/src/main/java/...`. A row citing a real
+#     file therefore failed with "no source code location" whatever real file it cited. (Item 1.1
+#     corrected CONFIG["src_main"] for the reactor but not this regex, which does not read CONFIG.)
+#
+# Both forms are accepted and both are resolved ON DISK, so a row still cannot cite a record or a file
+# that does not exist. `src/main/` specifically: a design pattern the catalogue claims as Implemented
+# is part of the published surface, so a location under a test or harness root is a miscategorised row
+# rather than an implementation.
+_ADR_LINK_GOVERNED = re.compile(r"\((?:\.\./)*adr/(\d{4}-[a-z0-9-]+\.md)\)")
+_ADR_LINK_IMPORTED = re.compile(r"\((?:\.\./)*\.spec/adr/(d4np_java_adr_\d{3}_[a-z0-9_]+\.md)\)")
+_CODE_LINK = re.compile(r"\((?:\.\./)*((?:[A-Za-z0-9_.-]+/)?src/main/[A-Za-z0-9_./-]+)\)")
+
+
 def check_patterns():
     name = "patterns"
     if not exists("docs/patterns/README.md"):
@@ -304,15 +328,22 @@ def check_patterns():
     catalogued = [r for r in rows if "Implemented" in r or "Planned" in r]
     for row in catalogued:
         pattern = row.split("|")[2].strip()
-        adrs = re.findall(r"\((?:\.\./)*adr/(\d{4}-[a-z0-9-]+\.md)\)", row)
-        if not adrs:
-            fail(name, f"pattern '{pattern}': no ADR link in its row")
-        for adr in adrs:
+        governed = _ADR_LINK_GOVERNED.findall(row)
+        imported = _ADR_LINK_IMPORTED.findall(row)
+        if not governed and not imported:
+            fail(name, f"pattern '{pattern}': no ADR link in its row — expected "
+                       f"docs/adr/NNNN-*.md or .spec/adr/d4np_java_adr_NNN_*.md (both series are "
+                       f"binding; the digit count is semantic, ADR-0008)")
+        for adr in governed:
             if not exists(os.path.join("docs", "adr", adr)):
                 fail(name, f"pattern '{pattern}': ADR '{adr}' does not exist")
-        code = re.findall(r"\((?:\.\./)*(src/[A-Za-z0-9_./-]+)\)", row)
+        for adr in imported:
+            if not exists(os.path.join(".spec", "adr", adr)):
+                fail(name, f"pattern '{pattern}': imported ADR '{adr}' does not exist")
+        code = _CODE_LINK.findall(row)
         if not code:
-            fail(name, f"pattern '{pattern}': no source code location in its row")
+            fail(name, f"pattern '{pattern}': no source code location in its row — expected a path "
+                       f"under <module>/src/main/ (ADR-0003 reactor layout)")
         for path in code:
             if not exists(path):
                 fail(name, f"pattern '{pattern}': code location '{path}' does not exist")

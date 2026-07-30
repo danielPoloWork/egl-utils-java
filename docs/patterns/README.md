@@ -33,11 +33,11 @@ _Patterns named in the spec at intake are seeded below as **Planned**; each beco
 
 | # | Pattern | Status | Problem it addresses | Code location | ADR / PR |
 |---|---------|--------|----------------------|---------------|----------|
+| 1 | Result / Either | Implemented | FR-17 `Result<T>` — expected business outcomes as values instead of control flow | [`Result.java`](../../d4np-core/src/main/java/it/d4np/utils/Result.java) | [ADR-002](../../.spec/adr/d4np_java_adr_002_error_model.md) · [RFC-0001](../rfc/0001-core-contracts.md) · [ADR-0012](../adr/0012-the-null-boundary-of-the-core-error-vocabulary.md) |
 | — | Abstract Factory / keyed factory | Planned | FR-01 GenericFactory — construction by key without exposing concrete types | _TBD_ | _spec (intake)_ |
 | — | Builder (fluent) | Planned | FR-02 FluentBuilder — readable construction of multi-field domain objects | _TBD_ | _spec (intake)_ |
 | — | Strategy + Registry | Planned | FR-04 StrategyRegistry — runtime strategy selection with an explicit missing-key contract | _TBD_ | _spec (intake)_ |
 | — | Lazy initialization | Planned | FR-03 Lazy — deferred, once-only, safely published initialization | _TBD_ | _spec (intake)_ |
-| — | Result / Either | Planned | FR-17 Result<T> — expected business outcomes as values instead of control flow (ADR-002) | _TBD_ | _spec (intake)_ |
 | — | Service Provider Interface | Planned | FR-12 KeyProvider and FR-10 DistributedLock — substitutable implementations behind an interface (ADR-001) | _TBD_ | _spec (intake)_ |
 | — | Adapter | Planned | spring-adapter and lock-redisson — host/framework coupling confined to the edge | _TBD_ | _spec (intake)_ |
 | — | Template method / callback | Planned | FR-05 SimpleJdbcExecutor and FR-06 JdbcTxRunner — the library owns the resource lifecycle, the caller supplies the body | _TBD_ | _spec (intake)_ |
