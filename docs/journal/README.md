@@ -17,6 +17,12 @@ At the close of a state-changing session, the agent:
 
 _(newest first)_
 
+#### August
+
+- [2026-08-01 — `Lazy<T>` and safe publication (item 2.2)](2026/08/2026-08-01-lazy-safe-publication.md) —
+  FR-03 closed and NFR-01 measured at 0.83–0.95 ns/op; ADR-0013; one `volatile` found to be guarded by
+  review rather than by any gate.
+
 #### July
 
 - [2026-07-30 — the core error vocabulary (item 2.1)](2026/07/2026-07-30-core-error-vocabulary.md) —
