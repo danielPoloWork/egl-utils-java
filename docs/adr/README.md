@@ -38,7 +38,7 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **21 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **22 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows.
 
@@ -63,6 +63,7 @@ page — including if a re-render of the generated docs ever drops the rows.
 | [0015](0015-strategy-registry-last-write-wins.md) | Keep `StrategyNotFoundException` outside the `BusinessException` hierarchy, and carry its keys as text | Accepted |
 | [0016](0016-generic-factory-atomic-duplicate-rejection.md) | Make `GenericFactory` thread-safe, and reject duplicates atomically | Accepted |
 | [0017](0017-fluent-builder-accumulated-validation.md) | Give `FluentBuilder` a second accumulator, and keep the defensive-copy rule a documented obligation | Accepted |
+| [0018](0018-tokenizer-word-threshold-and-utf8-default.md) | Resolve FR-22's table-versus-prose contradiction with a two-character word threshold | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

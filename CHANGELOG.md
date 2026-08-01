@@ -60,6 +60,18 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   and returns a distinct instance per call over a builder that is not reset. Beyond the four members
   RFC-0001 sketched it adds **`reject(String)`**, without which cross-field invariants could only
   throw — and so could not participate in the accumulate-everything contract the RFC states.
+- **`StringCaseConverter`, `ObjectUtils`, `ResourceLoaderUtils` and `ResourceNotFoundException`** —
+  the last three types of Milestone 2 (ROADMAP item 2.5, FR-22/23/24, RFC-0001,
+  [ADR-0018](docs/adr/0018-tokenizer-word-threshold-and-utf8-default.md)). `StringCaseConverter`
+  renders `camelCase` / `snake_case` / `kebab-case` from one shared tokenizer, mapping case with
+  **`Locale.ROOT`** so a Turkish-locale JVM cannot silently corrupt an identifier; conversions are
+  idempotent and total, and the acronym round trip is an explicit **non**-guarantee.
+  `ObjectUtils` holds **only what `java.util.Objects` does not** — `anyNull`, `allNonNull`,
+  `requireNonBlank`, `compareNullsFirst`/`Last`, and typed `isEmpty`/`isNotEmpty` overloads with no
+  `isEmpty(Object)` to bind to by accident. `ResourceLoaderUtils` resolves through a caller-supplied
+  `Class<?>` **anchor** — the only rule that works across exploded, JAR and named-module layouts —
+  normalizes a leading `/`, **rejects any name containing `..`**, and defaults to UTF-8 written out
+  rather than the platform charset.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through

@@ -19,6 +19,9 @@ _(newest first)_
 
 #### August
 
+- [2026-08-01 — the last three core types, and Milestone 2 closes (item 2.5)](2026/08/2026-08-01-string-object-resource-utils.md) —
+  `StringCaseConverter`, `ObjectUtils`, `ResourceLoaderUtils`; ADR-0018 resolves a contradiction inside
+  RFC-0001's own FR-22; **Milestone 2 complete**.
 - [2026-08-01 — the two creational patterns (item 2.4)](2026/08/2026-08-01-factory-and-builder.md) —
   `GenericFactory` and `FluentBuilder`; ADR-0016 and ADR-0017; two places where the pinned contract
   could not deliver its own promise.
