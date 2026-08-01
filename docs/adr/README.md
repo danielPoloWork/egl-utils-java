@@ -38,7 +38,7 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **17 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **19 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows.
 
@@ -59,6 +59,8 @@ page — including if a re-render of the generated docs ever drops the rows.
 | [0011](0011-declare-the-nullability-annotation-in-core.md) | Declare the nullability annotation in core instead of depending on one | Accepted |
 | [0012](0012-the-null-boundary-of-the-core-error-vocabulary.md) | Enforce `Ok(null)` mechanically, and leave a successful `Result<Void>` unconstructible | Accepted |
 | [0013](0013-lazy-initialization-by-double-checked-volatile.md) | Publish `Lazy<T>` through double-checked `volatile`, behind a private monitor | Accepted |
+| [0014](0014-log-through-the-jdk-system-logger.md) | Log through `java.lang.System.Logger`, and make the call testable by injection | Accepted |
+| [0015](0015-strategy-registry-last-write-wins.md) | Keep `StrategyNotFoundException` outside the `BusinessException` hierarchy, and carry its keys as text | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 
