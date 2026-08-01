@@ -23,9 +23,19 @@ import org.openjdk.jcstress.infra.results.II_Result;
  * runner runs.
  *
  * <p><strong>Why it is here rather than in d4np-concurrent.</strong> The claim being modelled is
- * core's (FR-03 {@code Lazy}), and item 2.2 replaces this harness's subject with the real type
- * while keeping the outcome table. NFR-05's pool rejection/shutdown races are d4np-concurrent's and
+ * core's (FR-03 {@code Lazy}). NFR-05's pool rejection/shutdown races are d4np-concurrent's and
  * arrive with item 5.1.
+ *
+ * <p><strong>Item 2.2 kept this harness rather than replacing it, and this note used to predict
+ * otherwise.</strong> The plan was for 2.2 to swap the subject for the real {@code Lazy} while
+ * keeping the outcome table; what it actually did was add {@code LazyPublicationStress}
+ * <em>beside</em> this one. They are different experiments rather than two versions of one: this
+ * file exercises the bare {@code volatile} write/read pair with no lock, which makes it the
+ * <strong>control</strong> — if both fail, the platform or the JDK is the suspect; if only the
+ * {@code Lazy} harness fails, the fault is in our code. That is the role {@code
+ * PublicationBaselineBenchmark} keeps on the JMH side, and it costs about a second of a
+ * profile-gated job. Deleting a passing correctness test to satisfy a note's wording would have
+ * been the worse trade.
  *
  * <p>The unnamed trailing {@link Outcome} is a catch-all: an interleaving nobody enumerated is a
  * finding, not a pass, and without it jcstress would report the result as merely unmatched.

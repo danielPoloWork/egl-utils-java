@@ -21,6 +21,16 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   third-party dependencies while NullAway still checks it ([ADR-0011](docs/adr/0011-declare-the-nullability-annotation-in-core.md)).
 - `d4np-core` now **exports** `it.d4np.utils` from its module descriptor; consumers can
   `import it.d4np.utils.*;` for the first time.
+- **`Lazy<T>`** — thread-safe, compute-once initialization (ROADMAP item 2.2, FR-03, NFR-01,
+  RFC-0001, [ADR-0013](docs/adr/0013-lazy-initialization-by-double-checked-volatile.md)).
+  `Lazy.of(supplier)` **retries** after a failed initialization; `Lazy.memoizingFailures(supplier)`
+  remembers the first failure and rethrows it unchanged. An initializer that returns `null` or calls
+  `get()` on the `Lazy` it is initializing raises `IllegalStateException`. **The first NFR in this
+  project backed by a measurement rather than an assertion:** NFR-01 budgets `get()` at ≤ 2 ns/op in
+  steady state, and `LazyGetBenchmark` measures **0.827 ns/op on JDK 17 and 0.945 ns/op on JDK 21** —
+  0.2–0.4 ns/op above the raw volatile read the budget is made of, which is the delta that says the
+  call inlines ([report](docs/benchmarks/2026-08-01-lazy-get.md)). Safe publication and at-most-once
+  initialization are proven by two named jcstress harnesses, not claimed.
 
 ### Changed
 

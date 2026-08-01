@@ -60,7 +60,7 @@ setup.
 | # | Title | Status |
 |---|---|---|
 | 1 | Project bootstrap & CI | ✅ done |
-| 2 | core foundations | ⏳ planned |
+| 2 | core foundations | 🚧 in progress |
 | 3 | core cross-cutting | ⏳ planned |
 | 4 | json and jdbc | ⏳ planned |
 | 5 | concurrent | ⏳ planned |

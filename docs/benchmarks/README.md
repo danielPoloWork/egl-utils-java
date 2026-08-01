@@ -23,6 +23,7 @@ One report per measured scenario, from [`template.md`](template.md). Keep the in
 
 | Date | Scenario | Version | Headline result | Report |
 |------|----------|---------|-----------------|--------|
+| 2026-08-01 | `Lazy.get()` steady state — the NFR-01 budget | v0.1.0 + item 2.2 | **0.827 ns/op (JDK 17) and 0.945 ns/op (JDK 21) against a ≤ 2 ns/op budget** — NFR-01 met with ~2x headroom, and only 0.2–0.4 ns/op above the bare volatile read, which is what says `get()` inlines (**informational**, 1 fork x 1 iteration) | [report](2026-08-01-lazy-get.md) |
 | 2026-07-29 | Publication baseline — volatile vs. final field read | v0.0.0 | 0.4–0.6 ns/op on both toolchains, so NFR-01's 2 ns/op budget has 3–4x headroom over its floor (**informational**, 1 fork x 1 iteration) | [report](2026-07-29-publication-baseline.md) |
 
 Harnesses live under `<module>/src/bench/java/` and run via `mvn -B -Pjmh verify`; the jcstress
