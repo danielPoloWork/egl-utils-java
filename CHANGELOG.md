@@ -31,6 +31,23 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   0.2–0.4 ns/op above the raw volatile read the budget is made of, which is the delta that says the
   call inlines ([report](docs/benchmarks/2026-08-01-lazy-get.md)). Safe publication and at-most-once
   initialization are proven by two named jcstress harnesses, not claimed.
+- **`StrategyRegistry<K,S>` and `StrategyNotFoundException`** — keyed strategy lookup with lock-free
+  reads (ROADMAP item 2.3, FR-04, NFR-04, RFC-0001,
+  [ADR-0015](docs/adr/0015-strategy-registry-last-write-wins.md)). `find(key)` returns an
+  `Optional` for the case where absence is an ordinary answer; `getOrThrow(key)` raises
+  `StrategyNotFoundException` **carrying every key that is registered**, which is usually what ends
+  the investigation at the log line. `register` is last-write-wins and never silent — a replacement
+  emits a `WARNING` naming the key and both strategy classes. **NFR-04 is met on both toolchains:**
+  `find` measures **12.8 ns/op on JDK 21 and 17.8 ns/op on JDK 17** at the budgeted shape of 1000
+  strategies under 8-thread read load, against a ≤ 50 ns/op budget
+  ([report](docs/benchmarks/2026-08-01-strategy-registry-find.md)). `StrategyNotFoundException`
+  deliberately does **not** extend `BusinessException`: FR-19 maps the two to different HTTP statuses
+  (500 + alert versus 422), and a test asserts the negative.
+- **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
+  ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
+  `requires` edge — the module still requires nothing but `java.base` — and the output routes through
+  whatever backend the consuming application already installed. This is the precedent for every later
+  module that needs to log.
 
 ### Changed
 
