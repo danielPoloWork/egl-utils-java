@@ -19,6 +19,9 @@ _(newest first)_
 
 #### August
 
+- [2026-08-01 — the two creational patterns (item 2.4)](2026/08/2026-08-01-factory-and-builder.md) —
+  `GenericFactory` and `FluentBuilder`; ADR-0016 and ADR-0017; two places where the pinned contract
+  could not deliver its own promise.
 - [2026-08-01 — `StrategyRegistry` and the library's first logging (item 2.3)](2026/08/2026-08-01-strategy-registry.md) —
   FR-04 closed and NFR-04 measured at 12.8 ns/op (JDK 21) / 17.8 (JDK 17); ADR-0014 and ADR-0015; a
   documented performance claim refuted by its own benchmark, on one toolchain only.

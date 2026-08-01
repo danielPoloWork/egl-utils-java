@@ -55,7 +55,7 @@ class StrategyNotFoundExceptionTest {
     StrategyNotFoundException thrown = new StrategyNotFoundException("k", List.of());
 
     assertThat(thrown.knownKeys()).isEmpty();
-    assertThat(thrown).hasMessageContaining("the registry is empty");
+    assertThat(thrown).hasMessageContaining("nothing is registered");
   }
 
   @Test
@@ -73,7 +73,7 @@ class StrategyNotFoundExceptionTest {
     assertThat(thrown.knownKeys()).hasSize(1000);
     assertThat(thrown).hasMessageContaining("1000 known");
     // The truncation is stated, not silent: a reader who sees the count knows to ask for the rest.
-    int hidden = 1000 - StrategyNotFoundException.MAX_KEYS_IN_MESSAGE;
+    int hidden = 1000 - KeyDiagnostics.MAX_KEYS_IN_MESSAGE;
     assertThat(thrown).hasMessageContaining("and " + hidden + " more");
     assertThat(thrown.getMessage()).contains("key0000").doesNotContain("key0999");
   }
