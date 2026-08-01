@@ -1,12 +1,7 @@
 package it.d4np.utils;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * No strategy is registered under the requested key — thrown by {@link
@@ -46,18 +41,14 @@ public final class StrategyNotFoundException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 
-  /** How many known keys {@link #getMessage()} lists before it truncates. */
-  static final int MAX_KEYS_IN_MESSAGE = 20;
-
   /** The rendered key that missed; never null. */
   private final String key;
 
   /**
    * Every key registered when this was thrown, rendered, sorted and unmodifiable.
    *
-   * <p>{@link Collections#unmodifiableSet(Set)} over a {@link LinkedHashSet} rather than {@link
-   * Set#copyOf(Collection)}: both are serialisable and immutable to the caller, but only the former
-   * keeps iteration order, and the order here is the sort that makes two log lines comparable.
+   * <p>Built by {@link KeyDiagnostics#snapshot(Collection)}, which is shared with {@link
+   * FactoryKeyNotFoundException} so the two cannot drift apart.
    */
   private final Set<String> knownKeys;
 
@@ -73,10 +64,9 @@ public final class StrategyNotFoundException extends RuntimeException {
    *     may be empty, and is copied rather than retained
    */
   StrategyNotFoundException(Object key, Collection<?> knownKeys) {
-    super(describe(key, knownKeys));
+    super(KeyDiagnostics.describe("strategy", key, knownKeys));
     this.key = String.valueOf(key);
-    this.knownKeys =
-        Collections.unmodifiableSet(new LinkedHashSet<>(render(Objects.requireNonNull(knownKeys))));
+    this.knownKeys = KeyDiagnostics.snapshot(knownKeys);
   }
 
   /**
@@ -98,39 +88,5 @@ public final class StrategyNotFoundException extends RuntimeException {
    */
   public Set<String> knownKeys() {
     return knownKeys;
-  }
-
-  /**
-   * Renders a key collection to a sorted list of strings.
-   *
-   * <p>Sorted on the rendered form rather than on {@code K}: the key type is unconstrained, so
-   * {@link Comparable} cannot be assumed, and a deterministic message is worth more here than the
-   * key type's own ordering would be.
-   */
-  private static List<String> render(Collection<?> keys) {
-    return keys.stream().map(String::valueOf).sorted().collect(Collectors.toList());
-  }
-
-  /**
-   * Builds the message eagerly, because {@link Throwable} has no lazy message.
-   *
-   * <p>Truncation is stated rather than silent — a reader who sees "and 980 more" knows to call
-   * {@link #knownKeys()}, whereas a list that simply stopped at twenty would look complete.
-   */
-  private static String describe(Object key, Collection<?> knownKeys) {
-    List<String> rendered = render(Objects.requireNonNull(knownKeys, "knownKeys"));
-    StringBuilder message =
-        new StringBuilder("no strategy registered for key ")
-            .append('[')
-            .append(String.valueOf(key))
-            .append(']');
-    if (rendered.isEmpty()) {
-      return message.append("; the registry is empty").toString();
-    }
-    message.append("; ").append(rendered.size()).append(" known: ");
-    message.append(
-        rendered.stream().limit(MAX_KEYS_IN_MESSAGE).collect(Collectors.joining(", ", "[", "")));
-    int hidden = rendered.size() - MAX_KEYS_IN_MESSAGE;
-    return message.append(hidden > 0 ? ", and " + hidden + " more]" : "]").toString();
   }
 }

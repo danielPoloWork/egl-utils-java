@@ -43,6 +43,23 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   ([report](docs/benchmarks/2026-08-01-strategy-registry-find.md)). `StrategyNotFoundException`
   deliberately does **not** extend `BusinessException`: FR-19 maps the two to different HTTP statuses
   (500 + alert versus 422), and a test asserts the negative.
+- **`GenericFactory<T,K>` and `FactoryKeyNotFoundException`** — keyed construction without naming a
+  concrete type (ROADMAP item 2.4, FR-01, RFC-0001,
+  [ADR-0016](docs/adr/0016-generic-factory-atomic-duplicate-rejection.md)). `register` **rejects a
+  duplicate key**, `replace` is the explicit override, `create` throws with every bound key listed,
+  `tryCreate` returns an `Optional`, and `keys()` is an unmodifiable snapshot. The deliberate
+  opposite of `StrategyRegistry`, which is last-write-wins: a factory is wired once at startup, where
+  a duplicate usually means two modules claiming one discriminator. **The factory is thread-safe — a
+  contract neither the spec nor RFC-0001 stated** — and duplicate rejection is a single
+  `putIfAbsent`, so two threads racing on one key cannot both believe they won; a jcstress harness
+  forbids that outcome by name.
+- **`FluentBuilder<T>` and `BuilderValidationException`** — the template-method base for fluent
+  builders (ROADMAP item 2.4, FR-02, RFC-0001,
+  [ADR-0017](docs/adr/0017-fluent-builder-accumulated-validation.md)). `build()` runs the subclass's
+  whole `validate()` and reports **every** violation at once rather than the first, is repeatable,
+  and returns a distinct instance per call over a builder that is not reset. Beyond the four members
+  RFC-0001 sketched it adds **`reject(String)`**, without which cross-field invariants could only
+  throw — and so could not participate in the accumulate-everything contract the RFC states.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through
