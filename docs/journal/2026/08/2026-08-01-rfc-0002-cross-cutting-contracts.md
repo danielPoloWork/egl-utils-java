@@ -1,8 +1,8 @@
 # 2026-08-01 — RFC-0002, and the audit trail that would have leaked (ROADMAP item 3.0)
 
 **Milestone 3, item 3.0 — the first design-only item since RFC-0001.** Fifth checkpoint today. The
-deliverable is a contract, not a feature, and the one thing to carry forward is that **it is not
-approved.**
+deliverable is a contract, not a feature. It was drafted unapproved and **approved by the owner in
+session on 2026-08-02**, in a separate commit from the drafting.
 
 ## What changed
 
@@ -14,16 +14,16 @@ text is amended and the spec re-rendered. RFC-0001 gains a header note recording
 
 ## Where the project stands
 
-Milestone 2 is released-ready; Milestone 3 has **1 of 4 items closed**, and **3.1–3.3 are blocked
-until RFC-0002 is approved — not merely until this PR merges.** The RFC is `Proposed` with an empty
-`approved-by:`.
+Milestone 2 is released-ready; Milestone 3 has **1 of 4 items closed**, and **3.1–3.3 are unblocked** —
+RFC-0002 is `Accepted` on the owner's authority (2026-08-02).
 
 ## What the next session needs to know
 
-- **RFC-0002 is `Proposed`. Check its status before starting 3.1, 3.2 or 3.3.** No RFC self-approves
-  (AGENTS.md §6). The `Status` line was left un-pre-filled on purpose — an agent writing `Accepted` in
-  advance is exactly what the Approval section exists to prevent. If the owner approves, flip `Status`
-  and fill `approved-by:` in the same change.
+- **RFC-0002 is `Accepted`, but on owner authority alone — no peer-review round ran.** That is the
+  assurance it carries and the assurance it does not, and FR-16 is a security control whose threat
+  model the security-auditor owns. The draft-then-flip sequence is worth repeating for the next RFC:
+  author it `Proposed` with an empty `approved-by:` and flip only on the owner's word, in a separate
+  commit, so the two acts are visible as two acts in the history.
 - **The audit sink has no trust boundary in the threat model.** B1–B6 cover consumer→library,
   library→host framework, library→external services, key material, supply chain and test scope.
   "Library → host-supplied audit store" is none of them, and it is now the widest-retention sink in

@@ -1,6 +1,6 @@
 # RFC-0002: Cross-cutting core contracts — audit redaction, validation and metrics
 
-- **Status:** **Proposed** — no approval recorded; see [Approval](#approval)
+- **Status:** Accepted (2026-08-02, owner authority — no peer-review round; see [Approval](#approval))
 - **Author:** tech-lead · **Reviewers:** reviewer, security-auditor (FR-16 is a security control, not a
   feature), enterprise-architect · **Approver:** owner (@danielPoloWork)
 - **Date:** 2026-08-01
@@ -329,23 +329,25 @@ header so a reader who arrives at the original text is not misled.
 
 ## Approval
 
-The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). **No approval has
-been given.** This RFC was drafted by the agent, which did not judge its own soundness; the decision
-is the owner's.
+The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). The record below was
+**authorized by the owner (@danielPoloWork) in session on 2026-08-02** and transcribed by the agent.
+The agent drafted this RFC and did not judge its soundness; the decision is the owner's.
 
 ```
-approved-by: (none — Proposed)
+approved-by: owner @danielPoloWork (2026-08-02)
 ```
 
-**Review provenance.** No independent `reviewer`, `security-auditor` or `enterprise-architect` round
-has run. FR-16 is a security control and the security-auditor role owns the threat model it touches,
-so that absence is more material here than it was for RFC-0001; it is recorded so this document cannot
-be read as reviewed when it was not.
+**This document was drafted `Proposed` with an empty `approved-by:` and flipped only on the owner's
+word**, in a separate change from the drafting. That sequence is the point: a status field an agent
+set to `Accepted` in advance would be exactly the audit trail this section exists to prevent, so the
+two acts are visible as two acts in the history.
 
-Merging the pull request that introduces this file is the owner's act of acceptance. The `Status`
-line above should move to `Accepted` with a date and `approved-by:` at that point — it is left
-`Proposed` rather than pre-filled, because a status field an agent set to `Accepted` in advance is
-exactly the audit trail this section exists to prevent.
+**Review provenance — stated, not implied.** No independent `reviewer`, `security-auditor` or
+`enterprise-architect` round ran, and **approval did not change that**. This acceptance rests on the
+owner's direct authority (precedence layer 1, the terminal gate), not on a peer-review round. FR-16 is
+a security control and the security-auditor role owns the threat model it touches, so the absence is
+more material here than it was for RFC-0001 — recorded so a later reader knows which assurance this
+RFC does *and does not* carry.
 
 Reviewers (structured findings addressed): reviewer — **not run** ; security-auditor — **not run** ;
 enterprise-architect — **not run**.
