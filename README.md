@@ -39,6 +39,11 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
 - **Toolchain:** Maven 3.9+ (multi-module reactor), JUnit 5 + AssertJ; jqwik (property tests); jcstress (concurrency); H2 (JDBC integration), Spotless (google-java-format), ErrorProne + NullAway + Checkstyle; maven-enforcer for the ADR-001 dependency rules.
 - **Supported platforms:** Linux / Windows / macOS on Temurin JDK 17 & 21.
 - Consumers import the public surface via: `import it.d4np.utils.*;`.
+- **Optional at runtime:** `Validator` (FR-14) wraps Jakarta Bean Validation, which `core` declares
+  at `provided` scope and `requires static` — so nothing arrives in your graph unless you use it. A
+  consumer that calls `Validator.create()` supplies `jakarta.validation:jakarta.validation-api` and a
+  provider (Spring Boot 3.2+ already does); one that never validates carries neither, and the
+  zero-third-party-dependency claim is unchanged.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
@@ -61,7 +66,7 @@ setup.
 |---|---|---|
 | 1 | Project bootstrap & CI | ✅ done |
 | 2 | core foundations | ✅ done |
-| 3 | core cross-cutting | ⏳ planned |
+| 3 | core cross-cutting | 🚧 in progress |
 | 4 | json and jdbc | ⏳ planned |
 | 5 | concurrent | ⏳ planned |
 | 6 | security | ⏳ planned |

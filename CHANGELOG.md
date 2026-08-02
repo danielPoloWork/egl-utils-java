@@ -79,6 +79,20 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   ([ADR-0012](docs/adr/0012-the-null-boundary-of-the-core-error-vocabulary.md) recorded the proof).
   `Unit` closes it without making `null` sayable: `Result.ok()` passes `Unit.INSTANCE` through the
   same canonical constructor as every other payload.
+- **`Validator` and `ValidationException`** — Jakarta Bean Validation 3.x behind this library's own
+  error model (ROADMAP item 3.1, FR-14, RFC-0002,
+  [ADR-0020](docs/adr/0020-render-violations-from-the-message-template.md)). `validate` answers with
+  a `Result<T>`, `requireValid` returns the candidate or throws, and `violations` hands back the
+  rendered list; all three take optional validation groups. **A violation never carries the rejected
+  value** — every one renders as `property path: message template`, never Jakarta's interpolated
+  `getMessage()` (which resolves `${validatedValue}`) and never `getInvalidValue()`, so a credential
+  cannot ride an error message into an RFC 7807 body (compliance control C-01). The list is sorted,
+  because the provider's `Set` is not. **The dependency stays optional:** `core` declares
+  `jakarta.validation-api` at `provided` scope and `requires static jakarta.validation`, so a
+  consumer that never validates carries nothing, and one that does gets an `IllegalStateException`
+  at `Validator.create()` naming both missing artifacts rather than a `NoClassDefFoundError` from
+  the first validated call. `ValidationException` stays outside the `BusinessException` hierarchy:
+  FR-19 maps validation to **400** and `BusinessException` to **422**.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through

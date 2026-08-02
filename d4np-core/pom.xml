@@ -29,7 +29,49 @@
   <properties>
     <jmh.skip>false</jmh.skip>
     <jcstress.skip>false</jcstress.skip>
+
+    <!-- ITEM 3.1 / FR-14. Versions live HERE and not on the parent, per the parent's own rule:
+         "third-party dependency versions arrive with the module that needs them". This module is
+         the only one that may see Bean Validation at compile scope.
+
+         3.0.2 rather than 3.1.x: spec §1.1 pins the compatibility matrix to Spring Boot 3.2+, whose
+         managed Bean Validation is 3.0.2 with Hibernate Validator 8.0.x. A library that resolved a
+         newer API than the host's would be the classic "works in our tests, NoSuchMethodError in
+         production" shape — and at `provided` scope it is the HOST's copy that wins at run time,
+         so ours must be the floor of the matrix rather than the newest release. -->
+    <jakarta.validation.version>3.0.2</jakarta.validation.version>
+    <hibernate.validator.version>8.0.2.Final</hibernate.validator.version>
+    <expressly.version>5.0.0</expressly.version>
   </properties>
+
+  <!-- ITEM 3.1: the provider is TEST scope, and it has to be. FR-14's contract — a rendered
+       violation carries the property path and the message TEMPLATE, never the invalid value
+       (C-01) — is a claim about what a real provider produces, so a hand-written stub would assert
+       our own mock rather than the behaviour. Hibernate Validator is the reference implementation
+       and Spring Boot's default, and at test scope it constrains neither the public surface nor a
+       consumer's graph (NFR-08). Expressly is Hibernate Validator 8's Jakarta EL implementation:
+       without one on the classpath the factory bootstraps into a warning and falls back, so it is
+       declared rather than inherited by luck. -->
+  <dependencies>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>${jakarta.validation.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>${hibernate.validator.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.expressly</groupId>
+      <artifactId>expressly</artifactId>
+      <version>${expressly.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
   <!-- ITEM 1.7 / NFR-08: "core has ZERO third-party dependencies (jakarta.validation-api as
        provided)". Written as an ALLOWLIST (default-deny) rather than a list of banned frameworks,

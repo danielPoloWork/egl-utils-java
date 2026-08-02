@@ -15,12 +15,18 @@
  * and need no further clause; a capability module's own package is exported by that module's
  * descriptor.
  *
- * <p><strong>Still no {@code requires} beyond the mandated {@code java.base}</strong>, and that is
- * a statement of fact rather than an omission: the error vocabulary is built on {@code java.lang},
- * {@code java.io} and {@code java.util} alone. ADR-001 forbids third-party dependencies here; spec
- * §3 permits {@code jakarta.validation-api} as {@code provided}, which will appear as a {@code
- * requires static} edge when FR-14 needs it.
+ * <p><strong>The one {@code requires} is {@code static}</strong>, and that is what keeps ADR-001's
+ * zero-dependency claim true while FR-14 wraps Bean Validation: spec §3 permits {@code
+ * jakarta.validation-api} at {@code provided} scope only, so the edge must exist at compile time
+ * and must not be resolved at run time. A plain {@code requires} would make the module system
+ * refuse to start any consumer that does not ship a Bean Validation API — including every consumer
+ * that never touches {@code Validator} — turning an opt-in capability into a mandatory dependency.
+ * The price is that a missing provider becomes a runtime condition, which is why {@code
+ * Validator.create()} refuses at construction with a message naming both artifacts rather than
+ * letting a {@code NoClassDefFoundError} escape from the first validated call (RFC-0002 §FR-14).
  */
 module it.d4np.utils {
+  requires static jakarta.validation;
+
   exports it.d4np.utils;
 }
