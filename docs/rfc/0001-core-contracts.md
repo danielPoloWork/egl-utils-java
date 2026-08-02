@@ -14,6 +14,17 @@
 > Milestone 1 item 1.1 — so every signature below is still free to change. After 1.0 it is not:
 > japicmp gates binary compatibility per module (NFR-09).
 
+> **Amended in two places by [RFC-0002](0002-cross-cutting-contracts.md) §Amendments to RFC-0001.**
+> The body below is left as approved rather than rewritten, so this pointer is how a reader avoids
+> being misled by it. (1) **§FR-22's tokenizer rule** and its pseudocode split `URLs` into `UR`+`Ls`,
+> contradicting the table in the same section, which pins `URLs` as one token; the rule now requires
+> **at least two** lowercase characters after an uppercase run
+> ([ADR-0018](../adr/0018-tokenizer-word-threshold-and-utf8-default.md)). (2) **§Error model's
+> "`Ok(null)` forbidden — use `Result<Void>`"** named a construction that cannot exist, because `Void`
+> is uninhabited; it is **`Result<Unit>`**
+> ([ADR-0012](../adr/0012-the-null-boundary-of-the-core-error-vocabulary.md) recorded the proof,
+> [ADR-0019](../adr/0019-mint-unit-for-the-void-success.md) the fix).
+
 ## Context
 
 Nine of the twenty-five specified items belong to `d4np-core` and are scheduled into Milestone 2,

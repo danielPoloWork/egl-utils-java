@@ -72,6 +72,13 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   `Class<?>` **anchor** — the only rule that works across exploded, JAR and named-module layouts —
   normalizes a leading `/`, **rejects any name containing `..`**, and defaults to UTF-8 written out
   rather than the platform charset.
+- **`Unit`, and `Result.ok()`** — a successful outcome with nothing to return (ROADMAP item 3.0,
+  FR-17, [ADR-0019](docs/adr/0019-mint-unit-for-the-void-success.md)). `Result<Void>` **cannot be
+  constructed** — `Void` is uninhabited and `Ok` rejects `null` — so the construction FR-17 used to
+  recommend was impossible for any caller, including this library
+  ([ADR-0012](docs/adr/0012-the-null-boundary-of-the-core-error-vocabulary.md) recorded the proof).
+  `Unit` closes it without making `null` sayable: `Result.ok()` passes `Unit.INSTANCE` through the
+  same canonical constructor as every other payload.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through

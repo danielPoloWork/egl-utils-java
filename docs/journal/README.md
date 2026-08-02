@@ -19,6 +19,9 @@ _(newest first)_
 
 #### August
 
+- [2026-08-01 — RFC-0002, and the audit trail that would have leaked (item 3.0)](2026/08/2026-08-01-rfc-0002-cross-cutting-contracts.md) —
+  the FR-16 redaction policy, FR-14 and FR-15 contracts, and ADR-0019 minting `Unit`; **the RFC is
+  `Proposed`, not approved**.
 - [2026-08-01 — the last three core types, and Milestone 2 closes (item 2.5)](2026/08/2026-08-01-string-object-resource-utils.md) —
   `StringCaseConverter`, `ObjectUtils`, `ResourceLoaderUtils`; ADR-0018 resolves a contradiction inside
   RFC-0001's own FR-22; **Milestone 2 complete**.

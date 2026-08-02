@@ -79,6 +79,23 @@ public sealed interface Result<T> permits Result.Ok, Result.Err {
   }
 
   /**
+   * A successful outcome with nothing to return.
+   *
+   * <p>The construction FR-17 used to recommend — {@code Result<Void>} — cannot be built, because
+   * {@link Void} is uninhabited and {@link Ok} rejects a {@code null} payload. {@link Unit} is the
+   * answer (ADR-0012 recorded the problem, ADR-0019 the choice), and this factory is how it is
+   * reached.
+   *
+   * <p>No back door: {@link Unit#INSTANCE} goes through the same canonical constructor as every
+   * other payload, so {@code Ok}'s null rejection is untouched.
+   *
+   * @return an {@link Ok} carrying {@link Unit#INSTANCE}
+   */
+  static Result<Unit> ok() {
+    return new Ok<>(Unit.INSTANCE);
+  }
+
+  /**
    * A failed outcome carrying {@code error}.
    *
    * @param <T> the payload type the operation would have produced
