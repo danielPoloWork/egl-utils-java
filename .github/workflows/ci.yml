@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
@@ -111,7 +111,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with: { distribution: temurin, java-version: '21', cache: maven }
       # Two commands, not one, because their module scope differs — see commands.format_check.
       - run: mvn -B spotless:check -pl '!d4np-bom'
@@ -148,7 +148,7 @@ jobs:
         os: [ubuntu-24.04, windows-2022]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with: { distribution: temurin, java-version: '21', cache: maven }
       # shell: bash on both platforms so the '!d4np-bom' quoting has one meaning: PowerShell would
       # not treat these single quotes the same way, and cmd would pass them through literally.
@@ -165,7 +165,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B -Pjcstress verify
   compatibility:
@@ -175,7 +175,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with: { distribution: temurin, java-version: '21', cache: maven }
       # `mvn -B enforcer:enforce` was WRONG here and item 1.7 proved it by measurement, not by
       # reading docs: a bare CLI goal runs only the `default-cli` execution, which sees the
@@ -199,7 +199,7 @@ jobs:
     if: needs.bootstrap.outputs.ready == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with: { distribution: temurin, java-version: '21', cache: maven }
       # STILL RED, and owned elsewhere — same shape as the japicmp step above: the plugin is not
       # declared, so this fails with `No plugin found for prefix 'dependency-check'`. ROADMAP item 6.4
@@ -218,7 +218,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up JDK
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.toolchain == 'temurin-17' && '17' || '21' }}
