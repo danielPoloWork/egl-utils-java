@@ -25,7 +25,21 @@
   <!-- The file must be parseable and the outer type must match the filename. -->
   <module name="NewlineAtEndOfFile"/>
 
+  <!-- Makes @SuppressWarnings("CheckName") actually suppress a Checkstyle violation, which is the
+       mechanism AGENTS.md §9 prescribes: "suppress narrowly (@SuppressWarnings("CheckName") with a
+       reason), never with a broad disable". Without this filter and its TreeWalker holder below the
+       annotation is inert, and the only ways out of a rule are a suppressions file keyed by path —
+       which silences the rule for a whole FILE, including code written later — or deleting the rule.
+       Added in ROADMAP item 3.2, whose first legitimate exception arrived: FR-15's advice body must
+       declare `throws Throwable` to bind to `ProceedingJoinPoint.proceed()` (ADR-0021), and item
+       7.x's @Around advice will have to do the same. Scope is deliberately narrow — the annotation
+       names the check and sits on the one method that needs it, so it is visible in review. -->
+  <module name="SuppressWarningsFilter"/>
+
   <module name="TreeWalker">
+
+    <!-- Collects the @SuppressWarnings annotations that SuppressWarningsFilter above acts on. -->
+    <module name="SuppressWarningsHolder"/>
 
     <!-- ===== Project policy, encoded as lint =====================================
          Spec §1.1 / NFR-07: the jakarta.* namespace only; javax.* is explicitly out of scope.

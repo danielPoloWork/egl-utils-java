@@ -66,6 +66,7 @@ page — including if a re-render of the generated docs ever drops the rows.
 | [0018](0018-tokenizer-word-threshold-and-utf8-default.md) | Resolve FR-22's table-versus-prose contradiction with a two-character word threshold | Accepted |
 | [0019](0019-mint-unit-for-the-void-success.md) | Mint `Unit` so a `Result` can succeed without a payload | Accepted |
 | [0020](0020-render-violations-from-the-message-template.md) | Render constraint violations from the message template, never the interpolated message | Accepted |
+| [0021](0021-time-through-an-advice-body-core-can-own.md) | Ship FR-15 as an advice body core can own, and bound what instrumentation is allowed to break | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

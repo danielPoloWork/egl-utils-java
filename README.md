@@ -44,6 +44,12 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   consumer that calls `Validator.create()` supplies `jakarta.validation:jakarta.validation-api` and a
   provider (Spring Boot 3.2+ already does); one that never validates carries neither, and the
   zero-third-party-dependency claim is unchanged.
+- **Metrics are opt-in the same way:** `ExecutionTimeMetricAspect` (FR-15) times a call and reports to
+  an `ExecutionTimeRecorder` chosen once at construction. `create()` installs the dependency-free
+  fallback, which logs through `System.Logger` at **`DEBUG`** — so a host that has enabled nothing sees
+  nothing, deliberately ([ADR-0021](docs/adr/0021-time-through-an-advice-body-core-can-own.md)). The
+  Micrometer recorder and the AspectJ/Spring binding live in the adapter module; core never names
+  either.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
