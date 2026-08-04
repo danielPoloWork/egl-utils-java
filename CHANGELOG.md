@@ -93,6 +93,22 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   at `Validator.create()` naming both missing artifacts rather than a `NoClassDefFoundError` from
   the first validated call. `ValidationException` stays outside the `BusinessException` hierarchy:
   FR-19 maps validation to **400** and `BusinessException` to **422**.
+- **`ExecutionTimeMetricAspect`, `ExecutionTimeRecorder` and `LoggingExecutionTimeRecorder`** —
+  execution timing with a pluggable sink (ROADMAP item 3.2, FR-15, RFC-0002,
+  [ADR-0021](docs/adr/0021-time-through-an-advice-body-core-can-own.md)). `create()` times through the
+  dependency-free fallback; `using(recorder)` takes a host's sink, and it is **resolved once, at
+  construction**, so two measurements of one method stay comparable. Three entry points: `time` carries
+  `throws Throwable` for an `@Around` advice — its `Invocation` mirrors `ProceedingJoinPoint.proceed()`
+  so the adapter wraps nothing — while `call(Supplier)` and `run(Runnable)` serve ordinary code.
+  **Instrumentation never breaks the measured call:** a recorder that throws a `RuntimeException` or a
+  `LinkageError` is absorbed and the measured outcome is unchanged, warned about **at most once per
+  aspect** (an unbounded warning on a failing sink is its own denial of service, proven under a race by
+  `ExecutionTimeRecorderFailureStress`); a dying-VM `Error` still propagates. **Failed invocations are
+  timed too**, distinguished by `failed`, because timing only successes biases every latency number.
+  **Despite its name it is not an AspectJ aspect** — core may see neither `aspectjrt` nor Micrometer
+  (ADR-001), so this is the advice body and the `@Aspect`, the pointcut and the Micrometer recorder
+  arrive with the Spring adapter. The fallback logs at **`DEBUG`**: a host that has enabled nothing sees
+  nothing, deliberately.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through
@@ -101,6 +117,11 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 
 ### Changed
 
+- The Checkstyle ruleset gains `SuppressWarningsFilter` and `SuppressWarningsHolder`, so a narrow
+  `@SuppressWarnings("CheckName")` with a stated reason suppresses a Checkstyle violation as
+  `AGENTS.md` §9 prescribes. Without them the annotation was inert and the only exit from a rule was a
+  path-keyed suppressions file that silences it for an entire file. First needed by FR-15's
+  `throws Throwable` (item 3.2, [ADR-0021](docs/adr/0021-time-through-an-advice-body-core-can-own.md)).
 - The `jcstress` profile passes `-jvmArgsPrepend "-XX:+UnlockDiagnosticVMOptions
   -XX:-RestrictContended"`, restoring `@Contended` padding in the forked test VMs. jcstress's own
   capability probe cannot survive a classpath directory containing a class named `*Result*`, and
