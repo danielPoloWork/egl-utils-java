@@ -5,14 +5,18 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 6              # the optimistic-concurrency counter for THIS FILE, not for the phase —
+manifest_rev: 7              # the optimistic-concurrency counter for THIS FILE, not for the phase —
                              # render.py's own words ("the optimistic-concurrency counter"), and
-                             # phase_runner only *emits* the bump as part of a transition. So ANY write
-                             # moves it, transition or not: item 4.0 takes it 4 -> 5 for the RFC-0003
-                             # cross-links and the two FR pointers below, then 5 -> 6 for its separate
-                             # approval commit. The second bump is for a comment correction alone, and
-                             # it is taken deliberately — a file that changed without the counter moving
-                             # is exactly what the counter exists to make impossible to miss.
+                             # phase_runner only *emits* the bump as part of a transition. **Any write
+                             # moves it, transition or not**, including a comment-only correction: a
+                             # file that changed without the counter moving is exactly what the counter
+                             # exists to make impossible to miss. Item 4.0 took it 4 -> 7 across its
+                             # three commits (the RFC cross-links, the owner's approval, and PR #43's
+                             # number below). Rev 4 was set by the scaffold -> audit transition, whose
+                             # write WAS guarded (#214) with --expect-rev 3; no --expect-rev guard
+                             # applies to item 4.0's writes because there is no transition to propose
+                             # (see delivery_state.phase). Item 3.0 edited FR-16/FR-17 in this file
+                             # without moving the counter — the omission this item back-fills below.
                              # NO `phase_runner --propose` ran and no --expect-rev guard applies here:
                              # there is no transition to propose (see delivery_state.phase). Rev 4 was set
                              # by the scaffold -> audit transition, whose write WAS guarded (#214):
@@ -77,13 +81,14 @@ delivery_state:
   # rfc -> milestone is derived from ROADMAP.md by traceability.covering_milestones (which returns
   # bare numbers; doctor.py prefixes the M), so nothing parses the list below — it is the recorded
   # cross-link, read by doctor.py for the status readout.
-  refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33], releases: [] }
+  refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33, 43], releases: [] }
   # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges);
-  # PR #33 = landed RFC-0002. The PR that lands RFC-0003 is added once it exists. This line first read
-  # "added with its approval commit", which is what RFC-0001 did (its `refs.prs` gained 4 in commit
-  # a16dc63, not in the drafting one) — but item 4.0's owner approval arrived BEFORE the PR was opened,
-  # so the approval commit had no number to record. Corrected rather than left as a promise the sequence
-  # had already broken; a PR number simply does not exist until someone opens the PR.
+  # PR #33 = landed RFC-0002; PR #43 = lands RFC-0003. Recorded while #43 is OPEN rather than after it
+  # merges, which is a deliberate departure: RFC-0001's number went in with its approval commit, and
+  # this item's approval arrived BEFORE the PR existed, so there was no number to record then. The
+  # alternative was to promise the write again and do it later — which is precisely the shape that left
+  # RFC-0002 unrecorded here for two milestones. A cross-link to an open PR is a true statement; a
+  # promise to add one is not a record.
   # BACK-FILLED BY ITEM 4.0, and the omission is worth naming rather than quietly fixing: RFC-0002
   # landed in PR #33 and was never recorded here, although the sentence below promised it would be. The
   # design procedure's step 6 ("add the RFC id to delivery_state.refs.rfcs") was simply skipped for that
