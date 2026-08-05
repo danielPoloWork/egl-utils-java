@@ -1,6 +1,6 @@
 # RFC-0003: Persistence and serialization contracts — transactions, pagination and JSON hardening
 
-- **Status:** **Proposed** — no approval recorded; see [Approval](#approval)
+- **Status:** Accepted (2026-08-06, owner authority — no peer-review round; see [Approval](#approval))
 - **Author:** tech-lead · **Reviewers:** reviewer, enterprise-architect (two module surfaces and the
   first `java.sql` edge), security-auditor (FR-20's CVE class and the C-01 message rules) ·
   **Approver:** owner (@danielPoloWork)
@@ -683,24 +683,27 @@ and is handled in §Error model above.
 
 ## Approval
 
-The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). This document is
-drafted `Proposed` with an empty record, and the record below is filled only on the owner's word, in a
-change separate from the drafting:
+The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). The record below was
+**authorized by the owner (@danielPoloWork) in session on 2026-08-06** and transcribed by the agent.
+The agent drafted this RFC and did not judge its soundness; the decision is the owner's.
 
 ```
-approved-by: (none — Proposed)
+approved-by: owner @danielPoloWork (2026-08-06)
 ```
+
+**This document was drafted `Proposed` with an empty `approved-by:` and flipped only on the owner's
+word**, in a change separate from the drafting. That sequence is the point: a status field an agent set
+to `Accepted` in advance would be exactly the audit trail this section exists to prevent, so the two
+acts are visible as two acts in the history. **The approval also preceded the pull request** — it was
+given in session before the PR was opened — so merging publishes an already-accepted document rather
+than performing the acceptance.
 
 **Review provenance — stated, not implied.** No independent `reviewer`, `enterprise-architect` or
-`security-auditor` round has run. FR-20's default-typing stance and the two C-01 message rules are
-security decisions whose reviewer role owns the threat model they touch, so the absence is recorded
-here rather than left to be inferred — a later reader needs to know which assurance this RFC does *and
-does not* carry.
-
-Merging the pull request that introduces this file is not itself acceptance. The `Status` line above
-moves to `Accepted` with a date, and `approved-by:` gains a record, only when the owner says so — it is
-left `Proposed` rather than pre-filled, because a status field an agent set to `Accepted` in advance is
-exactly the audit trail this section exists to prevent.
+`security-auditor` round ran, and **approval did not change that**. This acceptance rests on the owner's
+direct authority (precedence layer 1, the terminal gate), not on a peer-review round. FR-20's
+default-typing stance and the two C-01 message rules are security decisions whose reviewer role owns the
+threat model they touch, so the absence is more material here than it would be for a feature RFC —
+recorded so a later reader knows which assurance this RFC does *and does not* carry.
 
 **On the approver role:** this project's RFCs are approved by the **owner**, not by the `tech-lead` that
 `.eados-core`'s RFC protocol names — which is why the mechanical `rfc_check.py` gate reports a failure

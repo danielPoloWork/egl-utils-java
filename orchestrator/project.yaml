@@ -5,11 +5,14 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 5              # the optimistic-concurrency counter for THIS FILE, not for the phase —
+manifest_rev: 6              # the optimistic-concurrency counter for THIS FILE, not for the phase —
                              # render.py's own words ("the optimistic-concurrency counter"), and
-                             # phase_runner only *emits* the bump as part of a transition. So a content
-                             # write moves it even when no transition happens, which is why item 4.0
-                             # takes it 4 -> 5 for the RFC-0003 cross-links and the two FR pointers below.
+                             # phase_runner only *emits* the bump as part of a transition. So ANY write
+                             # moves it, transition or not: item 4.0 takes it 4 -> 5 for the RFC-0003
+                             # cross-links and the two FR pointers below, then 5 -> 6 for its separate
+                             # approval commit. The second bump is for a comment correction alone, and
+                             # it is taken deliberately — a file that changed without the counter moving
+                             # is exactly what the counter exists to make impossible to miss.
                              # NO `phase_runner --propose` ran and no --expect-rev guard applies here:
                              # there is no transition to propose (see delivery_state.phase). Rev 4 was set
                              # by the scaffold -> audit transition, whose write WAS guarded (#214):
@@ -76,9 +79,11 @@ delivery_state:
   # cross-link, read by doctor.py for the status readout.
   refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33], releases: [] }
   # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges);
-  # PR #33 = landed RFC-0002. The PR that lands RFC-0003 is added with its approval commit, which is
-  # when item 3.0's predecessor did it too (RFC-0001's `refs.prs` gained 4 in commit a16dc63, not in the
-  # drafting one) — a PR number does not exist until after the branch is pushed.
+  # PR #33 = landed RFC-0002. The PR that lands RFC-0003 is added once it exists. This line first read
+  # "added with its approval commit", which is what RFC-0001 did (its `refs.prs` gained 4 in commit
+  # a16dc63, not in the drafting one) — but item 4.0's owner approval arrived BEFORE the PR was opened,
+  # so the approval commit had no number to record. Corrected rather than left as a promise the sequence
+  # had already broken; a PR number simply does not exist until someone opens the PR.
   # BACK-FILLED BY ITEM 4.0, and the omission is worth naming rather than quietly fixing: RFC-0002
   # landed in PR #33 and was never recorded here, although the sentence below promised it would be. The
   # design procedure's step 6 ("add the RFC id to delivery_state.refs.rfcs") was simply skipped for that

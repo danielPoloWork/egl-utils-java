@@ -2,8 +2,9 @@
 
 **Milestone 4 opens with its design item, the third design-only item after RFC-0001 and RFC-0002.**
 Second checkpoint today — item 3.3 closed Milestone 3 this morning. The deliverable is a contract, not
-a feature: no production code changed and the test count is unmoved at 333. It is drafted **unapproved**
-and blocks all five M4 implementation items until the owner says otherwise.
+a feature: no production code changed and the test count is unmoved at 333. It was drafted unapproved
+and **approved by the owner in session on 2026-08-06**, in a separate commit from the drafting and
+*before* the pull request was opened.
 
 ## What changed
 
@@ -53,10 +54,14 @@ something it did not. One mapper, two jobs, opposite defaults.
 
 ## What the next session needs to know
 
-- **RFC-0003 is `Proposed`, and merging the PR is not acceptance.** The draft-then-flip sequence item
-  3.0 established is repeated verbatim: `approved-by: (none — Proposed)` in the drafting commit, and a
-  **separate** commit flips `Status` to `Accepted` on the owner's word, so the two acts stay visible as
-  two acts. **Items 4.1–4.5 are blocked until approved, not merely until merged.**
+- **RFC-0003 is `Accepted` on owner authority alone (2026-08-06) — no peer-review round ran.** That is
+  the assurance it carries and the assurance it does not, and FR-20's default-typing stance plus the two
+  C-01 message rules are security decisions. The draft-then-flip sequence item 3.0 established was
+  repeated verbatim: `approved-by: (none — Proposed)` in the drafting commit, then a **separate** commit
+  flipping `Status` on the owner's word. **One difference worth carrying forward: the approval came
+  before the PR existed**, which is cleaner than item 3.0's order — it removes any reading in which
+  merging performs the acceptance, and it means `refs.prs` gains the PR number in a later change rather
+  than in the approval commit. **Items 4.1–4.5 are unblocked.**
 - **`rfc_check.py` now FAILs by design, and ADR-0023 is why.** The gate requires
   `approved-by: tech-lead`; RFC-0001 wrote that and passes, RFC-0002 wrote `owner @danielPoloWork` and
   fails. The gate's expectation also contradicts `AGENTS.md` §6, because `tech-lead` is the *authoring*

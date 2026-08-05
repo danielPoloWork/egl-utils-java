@@ -22,7 +22,7 @@ _(newest first)_
 - [2026-08-05 — RFC-0003, and two collisions the specification does not admit to (item 4.0)](2026/08/2026-08-05-rfc-0003-jdbc-and-json-contracts.md) —
   contracts for all five Milestone 4 requirements rather than the two mandated, because FR-05 × FR-06 and
   FR-20 × FR-21 each break in the seam between them; ADR-0023 settles who approves an RFC here;
-  **the RFC is `Proposed`, not approved — 4.1–4.5 stay blocked**.
+  **`Accepted` on the owner's authority (2026-08-06) — 4.1–4.5 unblocked**.
 - [2026-08-05 — `AuditLog`, and a trap reproduced rather than described (item 3.3)](2026/08/2026-08-05-audit-log-redaction.md) —
   FR-16's four redaction layers behind an event no caller can mint; ADR-0022; C-05 added and C-03 found
   to be gated after all; **Milestone 3 complete**.
