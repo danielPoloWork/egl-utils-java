@@ -67,6 +67,7 @@ page — including if a re-render of the generated docs ever drops the rows.
 | [0019](0019-mint-unit-for-the-void-success.md) | Mint `Unit` so a `Result` can succeed without a payload | Accepted |
 | [0020](0020-render-violations-from-the-message-template.md) | Render constraint violations from the message template, never the interpolated message | Accepted |
 | [0021](0021-time-through-an-advice-body-core-can-own.md) | Ship FR-15 as an advice body core can own, and bound what instrumentation is allowed to break | Accepted |
+| [0022](0022-redact-at-capture-behind-a-typed-event.md) | Redact at capture, behind an event no caller can mint | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

@@ -19,6 +19,15 @@ _(newest first)_
 
 #### August
 
+- [2026-08-05 — `AuditLog`, and a trap reproduced rather than described (item 3.3)](2026/08/2026-08-05-audit-log-redaction.md) —
+  FR-16's four redaction layers behind an event no caller can mint; ADR-0022; C-05 added and C-03 found
+  to be gated after all; **Milestone 3 complete**.
+- [2026-08-04 — `ExecutionTimeMetricAspect`, and the aspect that cannot be one (item 3.2)](2026/08/2026-08-04-execution-time-metric-aspect.md) —
+  FR-15 as an advice body core can own; ADR-0021; the Checkstyle escape hatch `AGENTS.md` §9 had always
+  prescribed and the ruleset had never enabled.
+- [2026-08-02 — `Validator` over Jakarta Bean Validation (item 3.1)](2026/08/2026-08-02-validator-jakarta-bean-validation.md) —
+  core's first third-party edge, at `provided` scope behind `requires static`; ADR-0020 renders
+  violations from the message template so a rejected credential cannot reach an RFC 7807 body.
 - [2026-08-01 — RFC-0002, and the audit trail that would have leaked (item 3.0)](2026/08/2026-08-01-rfc-0002-cross-cutting-contracts.md) —
   the FR-16 redaction policy, FR-14 and FR-15 contracts, and ADR-0019 minting `Unit`; **the RFC is
   `Proposed`, not approved**.

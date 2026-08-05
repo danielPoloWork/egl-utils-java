@@ -43,15 +43,14 @@ _Patterns named in the spec at intake are seeded below as **Planned**; each beco
 | — | Adapter (framework edge) | Planned | spring-adapter and lock-redisson — host/framework coupling confined to the edge. Distinct from row 6, which adapts a *provider API* inside core; this one adapts a *host framework* from a module that may see it (ADR-001) | _TBD_ | _spec (intake)_ |
 | — | Template method / callback | Planned | FR-05 SimpleJdbcExecutor and FR-06 JdbcTxRunner — the library owns the resource lifecycle, the caller supplies the body | _TBD_ | _spec (intake)_ |
 | 7 | Decorator (aspect) + Strategy | Implemented | FR-15 `ExecutionTimeMetricAspect` — timing added without touching the measured code: the aspect wraps a call it does not know, and the sink it reports to is an interchangeable `ExecutionTimeRecorder` fixed at construction. Applied as an **advice body**, not an AspectJ aspect — core may not see `aspectjrt` or Micrometer (ADR-001), so the `@Aspect`, the pointcut and the Micrometer recorder are the adapter's half | [`ExecutionTimeMetricAspect.java`](../../d4np-core/src/main/java/it/d4np/utils/ExecutionTimeMetricAspect.java) · [`ExecutionTimeRecorder.java`](../../d4np-core/src/main/java/it/d4np/utils/ExecutionTimeRecorder.java) | [ADR-0021](../adr/0021-time-through-an-advice-body-core-can-own.md) · [ADR-0014](../adr/0014-log-through-the-jdk-system-logger.md) · [RFC-0002](../rfc/0002-cross-cutting-contracts.md) |
+| 8 | Specification + Strategy (SPI) | Implemented | FR-16 `AuditLog` — the never-capture rule is an immutable predicate object (`AuditPolicy`) that composes by union and never by removal, so "which component names may never be captured" is a value a host can extend, read back and test rather than a condition buried in the engine; the destination is the interchangeable `AuditSink`, the same sink shape row 7 uses, with `LoggingAuditSink` as core's dependency-free implementation and the **opposite** failure policy — a failing audit sink throws where a failing metrics recorder is swallowed | [`AuditPolicy.java`](../../d4np-core/src/main/java/it/d4np/utils/AuditPolicy.java) · [`AuditSink.java`](../../d4np-core/src/main/java/it/d4np/utils/AuditSink.java) | [ADR-0022](../adr/0022-redact-at-capture-behind-a-typed-event.md) · [ADR-0014](../adr/0014-log-through-the-jdk-system-logger.md) · [RFC-0002](../rfc/0002-cross-cutting-contracts.md) |
 
 
 ## Rejected
 
-_No rejections recorded yet._
-
 | # | Pattern | Considered for | Rejected because | ADR / PR |
 |---|---------|----------------|------------------|----------|
-| — | —       | —              | —                | —        |
+| 1 | Visitor | FR-16 `AuditLog` — walking a host's object graph to capture before/after state | Classic Visitor requires the visited structure to cooperate: an `accept(Visitor)` method on every audited type. A library cannot ask a consumer's domain objects to implement its interface in order to be auditable, and an audit trail that only works on types written after the library arrived is not one. The **intent** — add an operation to an object structure without changing it — is met by a reflective walk over public accessors instead, which is the same goal reached without the contract. Recorded rather than silently skipped, because the traversal in `AuditLog.collect` reads like a Visitor and the next reader should know why it is not one | [ADR-0022](../adr/0022-redact-at-capture-behind-a-typed-event.md) |
 
 ## Superseded
 

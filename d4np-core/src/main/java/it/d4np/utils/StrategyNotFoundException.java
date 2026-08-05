@@ -19,8 +19,8 @@ import java.util.Set;
  * the debugger; the list usually ends the investigation at the log line, because the intended key
  * is almost always visible next to the one that missed — a typo, a case difference, a module that
  * never registered. {@link #knownKeys()} carries the complete set, while {@link #getMessage()}
- * shows at most {@value #MAX_KEYS_IN_MESSAGE} of them: NFR-04 sizes this registry at 1000
- * strategies, and a thousand-key exception message is not a diagnostic but an incident of its own.
+ * shows at most 20 of them: NFR-04 sizes this registry at 1000 strategies, and a thousand-key
+ * exception message is not a diagnostic but an incident of its own.
  *
  * <p><strong>Keys are captured as text, deliberately.</strong> Every {@link Throwable} is {@link
  * java.io.Serializable}, so a field of the registry's key type {@code K} would make this exception

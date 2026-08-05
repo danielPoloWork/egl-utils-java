@@ -50,6 +50,16 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   nothing, deliberately ([ADR-0021](docs/adr/0021-time-through-an-advice-body-core-can-own.md)). The
   Micrometer recorder and the AspectJ/Spring binding live in the adapter module; core never names
   either.
+- **Audit trails redact at capture, not at write:** `AuditLog` (FR-16) turns a before/after pair into
+  an `AuditEvent` that holds `[REDACTED]` where a value was blocked and **no API that returns a raw
+  one** — a sink cannot leak what it never receives. Mark what may be captured with `@Audited` (on a
+  component or on the type), opt a component out with `@Sensitive`, and note that `AuditPolicy`'s
+  never-capture list — `password`, `api_key`, `card_number`, … — outranks both and can be added to but
+  never removed from. A blocked component still records **that it changed**, so *"the password was
+  changed at 14:02 by alice"* survives without the password
+  ([ADR-0022](docs/adr/0022-redact-at-capture-behind-a-typed-event.md)). Records land in a host's
+  `AuditSink`; `create()` falls back to `System.Logger` at `INFO`, which is a development convenience
+  rather than a compliance store.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
@@ -72,7 +82,7 @@ setup.
 |---|---|---|
 | 1 | Project bootstrap & CI | ✅ done |
 | 2 | core foundations | ✅ done |
-| 3 | core cross-cutting | 🚧 in progress |
+| 3 | core cross-cutting | ✅ done |
 | 4 | json and jdbc | ⏳ planned |
 | 5 | concurrent | ⏳ planned |
 | 6 | security | ⏳ planned |
