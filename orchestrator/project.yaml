@@ -5,9 +5,24 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 4              # bumped with the scaffold -> audit transition recorded below. The write was
-                             # guarded (#214): re-proposed with --expect-rev 3 immediately beforehand,
-                             # which confirmed no other session had moved the rev.
+manifest_rev: 7              # the optimistic-concurrency counter for THIS FILE, not for the phase —
+                             # render.py's own words ("the optimistic-concurrency counter"), and
+                             # phase_runner only *emits* the bump as part of a transition. **Any write
+                             # moves it, transition or not**, including a comment-only correction: a
+                             # file that changed without the counter moving is exactly what the counter
+                             # exists to make impossible to miss. Item 4.0 took it 4 -> 7 across its
+                             # three commits (the RFC cross-links, the owner's approval, and PR #43's
+                             # number below). Rev 4 was set by the scaffold -> audit transition, whose
+                             # write WAS guarded (#214) with --expect-rev 3; no --expect-rev guard
+                             # applies to item 4.0's writes because there is no transition to propose
+                             # (see delivery_state.phase). Item 3.0 edited FR-16/FR-17 in this file
+                             # without moving the counter — the omission this item back-fills below.
+                             # NO `phase_runner --propose` ran and no --expect-rev guard applies here:
+                             # there is no transition to propose (see delivery_state.phase). Rev 4 was set
+                             # by the scaffold -> audit transition, whose write WAS guarded (#214):
+                             # re-proposed with --expect-rev 3 immediately beforehand, confirming no other
+                             # session had moved the rev. Item 3.0 edited FR-16/FR-17 in this file without
+                             # moving the counter — the same omission this item back-fills in refs below.
 domain: software             # development target (Q0.4) -> .eados-core/orchestrator/domains/software.yaml
 
 # delivery_state holds STATE + cross-link REFS (ids), never content (RFC-0001 §8).
@@ -66,14 +81,29 @@ delivery_state:
   # rfc -> milestone is derived from ROADMAP.md by traceability.covering_milestones (which returns
   # bare numbers; doctor.py prefixes the M), so nothing parses the list below — it is the recorded
   # cross-link, read by doctor.py for the status readout.
-  refs: { rfcs: ['RFC-0001'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7], releases: [] }
-  # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges).
-  # Coverage today is RFC-0001 -> M2 only. M1 is governed by ADR-001 + ADR-004 rather than an RFC
-  # (both Accepted — an RFC there would re-decide an accepted ADR); M3-M7 each open with an RFC item
-  # (3.0, 4.0, 5.0, 6.0, 7.0) that BLOCKS their implementation items, and M8 is plumbing for
-  # normatively-specified NFRs. So five RFCs are owed, and each is a legal `plan -> design` return
-  # (workflow.yaml makes that edge resumable and NOT human-gated). Recorded here so the gap is state,
-  # not folklore: `refs.rfcs` will grow to RFC-0002..0006 as those items land.
+  refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33, 43], releases: [] }
+  # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges);
+  # PR #33 = landed RFC-0002; PR #43 = lands RFC-0003. Recorded while #43 is OPEN rather than after it
+  # merges, which is a deliberate departure: RFC-0001's number went in with its approval commit, and
+  # this item's approval arrived BEFORE the PR existed, so there was no number to record then. The
+  # alternative was to promise the write again and do it later — which is precisely the shape that left
+  # RFC-0002 unrecorded here for two milestones. A cross-link to an open PR is a true statement; a
+  # promise to add one is not a record.
+  # BACK-FILLED BY ITEM 4.0, and the omission is worth naming rather than quietly fixing: RFC-0002
+  # landed in PR #33 and was never recorded here, although the sentence below promised it would be. The
+  # design procedure's step 6 ("add the RFC id to delivery_state.refs.rfcs") was simply skipped for that
+  # item. Two RFCs are added in one edit for the reason item 3.3 gave when it back-filled the journal
+  # index: a list with a hole in it is worth less than no list, because a reader cannot tell a gap from
+  # a fact. Verified rather than assumed — `traceability.py ROADMAP.md RFC-0001 RFC-0002 RFC-0003` reports
+  # roadmap-covers-rfcs: OK, with RFC-0002 -> M2, M3 and RFC-0003 -> M4.
+  # M1 is governed by ADR-001 + ADR-004 rather than an RFC (both Accepted — an RFC there would re-decide
+  # an accepted ADR); M3-M7 each open with an RFC item (3.0, 4.0, 5.0, 6.0, 7.0) that BLOCKS their
+  # implementation items, and M8 is plumbing for normatively-specified NFRs. So five RFCs are owed, three
+  # exist, and `refs.rfcs` grows to RFC-0004..0006 as items 5.0, 6.0 and 7.0 land. Each is a legal
+  # `plan -> design` return (workflow.yaml makes that edge resumable and NOT human-gated) — though note
+  # that none of the three RFC items has actually moved `phase`, which sits at `audit`: workflow.yaml has
+  # no `audit -> design` edge, so the RFC is authored as a roadmap item and the phase is left alone.
+  # Recorded here so that too is state, not folklore.
 
 identity:
   # Scope reconciled 2026-07-26: the maintainer confirmed `.spec/d4np-java.md` (reviewed draft
@@ -437,7 +467,7 @@ spec:
     - "FR-04 StrategyRegistry<K,S>: Optional<S> find(K) for the missing-key case; S getOrThrow(K) throws StrategyNotFoundException carrying the known-keys list; ConcurrentHashMap-backed lock-free reads (NFR-04); register is last-write-wins with a warning log."
     # jdbc — persistence
     - "FR-05 SimpleJdbcExecutor: try-with-resources lifecycle, POJO row mapping, PARAMETERIZED STATEMENTS ONLY — no string-concatenation overload exists, making PreparedStatement the enforced SQL-injection defense."
-    - "FR-06 JdbcTxRunner: programmatic transactions over a plain DataSource, scoped to non-Spring hosts; Javadoc directs Spring users to Spring's own TransactionTemplate. [GAP] no contract stated — isolation levels, nesting/suspension, savepoints, and which exception types trigger rollback are all undefined."
+    - "FR-06 JdbcTxRunner: programmatic transactions over a plain DataSource, scoped to non-Spring hosts; Javadoc directs Spring users to Spring's own TransactionTemplate. [GAP] no contract stated — isolation levels, nesting/suspension, savepoints, and which exception types trigger rollback are all undefined. [RESOLVED by RFC-0003, docs/rfc/0003-jdbc-and-json-contracts.md — that RFC pins the contract and takes precedence over this line.]"
     - "FR-07 PageRequest / PageResponse<T>: page >= 0, 1 <= size <= maxSize (default 200, configurable), violations throw IllegalArgumentException at construction; sort fields validated against a caller-supplied whitelist for injection-safe ordering; immutable."
     # concurrent
     - "FR-08 CustomThreadPoolFactory: named pools, thread priorities, explicit RejectedExecutionHandler; 0 jcstress anomalies for rejection/shutdown races and graceful shutdown drains within the configured timeout (NFR-05)."
@@ -457,7 +487,7 @@ spec:
     - "FR-19 GlobalExceptionHandler: Spring MVC advice mapping exceptions to RFC 7807 application/problem+json; lives in the Spring adapter module; normative mapping table — BusinessException -> 422, validation -> 400, StrategyNotFoundException -> 500 + alert, fallback -> 500."
     # json / core — utilities & conversion
     - "FR-20 JsonMapper: pre-configured Jackson (JavaTimeModule, FAIL_ON_UNKNOWN_PROPERTIES=false, NO default typing — the polymorphic-deserialization CVE class is configured away); isolated in the json module so Jackson stays optional for core consumers."
-    - "FR-21 ObjectMapperExtensions: deep-conversion and partial-mapping helpers. [GAP] operation list, null-vs-absent semantics, and collection/generic handling are unspecified."
+    - "FR-21 ObjectMapperExtensions: deep-conversion and partial-mapping helpers. [GAP] operation list, null-vs-absent semantics, and collection/generic handling are unspecified. [RESOLVED by RFC-0003, docs/rfc/0003-jdbc-and-json-contracts.md — that RFC pins the contract and takes precedence over this line.]"
     - "FR-22 StringCaseConverter: camelCase / snake_case / kebab-case conversion. [GAP] edge cases undefined — acronym runs (HTTPServer), embedded digits, and non-ASCII input need pinned table-driven expectations. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]"
     - "FR-23 ObjectUtils: null-safe comparison and validation helpers. [GAP] the helper set is not enumerated, so there is nothing specific to test. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]"
     - "FR-24 ResourceLoaderUtils: classpath resource loading. [GAP] behavior across exploded-directory vs JAR vs JPMS-encapsulated resources, and the missing-resource contract, are unspecified. [RESOLVED by RFC-0001, docs/rfc/0001-core-contracts.md — that RFC pins the contract and takes precedence over this line.]"

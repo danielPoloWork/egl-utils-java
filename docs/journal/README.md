@@ -19,6 +19,10 @@ _(newest first)_
 
 #### August
 
+- [2026-08-05 — RFC-0003, and two collisions the specification does not admit to (item 4.0)](2026/08/2026-08-05-rfc-0003-jdbc-and-json-contracts.md) —
+  contracts for all five Milestone 4 requirements rather than the two mandated, because FR-05 × FR-06 and
+  FR-20 × FR-21 each break in the seam between them; ADR-0023 settles who approves an RFC here;
+  **`Accepted` on the owner's authority (2026-08-06) — 4.1–4.5 unblocked**.
 - [2026-08-05 — `AuditLog`, and a trap reproduced rather than described (item 3.3)](2026/08/2026-08-05-audit-log-redaction.md) —
   FR-16's four redaction layers behind an event no caller can mint; ADR-0022; C-05 added and C-03 found
   to be gated after all; **Milestone 3 complete**.
@@ -29,8 +33,10 @@ _(newest first)_
   core's first third-party edge, at `provided` scope behind `requires static`; ADR-0020 renders
   violations from the message template so a rejected credential cannot reach an RFC 7807 body.
 - [2026-08-01 — RFC-0002, and the audit trail that would have leaked (item 3.0)](2026/08/2026-08-01-rfc-0002-cross-cutting-contracts.md) —
-  the FR-16 redaction policy, FR-14 and FR-15 contracts, and ADR-0019 minting `Unit`; **the RFC is
-  `Proposed`, not approved**.
+  the FR-16 redaction policy, FR-14 and FR-15 contracts, and ADR-0019 minting `Unit`; **`Accepted` on
+  the owner's authority (2026-08-02)** — this row read *"the RFC is `Proposed`, not approved"* until item
+  4.0, because the approval commit updated the checkpoint file and not its index row. Corrected here
+  rather than left standing, since a stale index is worse than a terse one.
 - [2026-08-01 — the last three core types, and Milestone 2 closes (item 2.5)](2026/08/2026-08-01-string-object-resource-utils.md) —
   `StringCaseConverter`, `ObjectUtils`, `ResourceLoaderUtils`; ADR-0018 resolves a contradiction inside
   RFC-0001's own FR-22; **Milestone 2 complete**.
