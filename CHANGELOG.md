@@ -109,6 +109,26 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   (ADR-001), so this is the advice body and the `@Aspect`, the pointcut and the Micrometer recorder
   arrive with the Spring adapter. The fallback logs at **`DEBUG`**: a host that has enabled nothing sees
   nothing, deliberately.
+- **`AuditLog`, `AuditEvent`, `AuditPolicy`, `AuditSink`, `LoggingAuditSink`, `@Audited`,
+  `@Sensitive`, `AuditWriteException` and `AuditCaptureException`** — state-change audit trails that
+  cannot carry a secret, and the last item of Milestone 3 (ROADMAP item 3.3, FR-16, RFC-0002,
+  [ADR-0022](docs/adr/0022-redact-at-capture-behind-a-typed-event.md)). **Redaction happens at
+  capture:** `capture(actor, action, before, after)` returns an `AuditEvent` that already holds
+  `[REDACTED]` where a value was blocked and offers **no API that returns a raw value**, because an
+  event passes through interceptors, queues, heap dumps and `toString()` calls on its way to a sink —
+  and a sink cannot leak what it never receives. Four layers decide each component, first match wins:
+  `AuditPolicy`'s never-capture list (`password`, `api_key`, `card_number`, …, matched on **whole
+  tokens** so `pin` never redacts `shipping`), then `@Sensitive`, then `@Audited` on the component,
+  then `@Audited` on the type, and otherwise the component is **omitted entirely** — a different
+  outcome from redacted, deliberately. **A blocked component still records that it changed**, which is
+  how *"the password was changed at 14:02 by alice"* reaches the trail without the password. Only
+  simple values are captured directly; a composite must carry `@Audited` on its own type and is
+  otherwise **refused**, because `String.valueOf` on a record prints every component and would publish
+  a nested `@Sensitive` field with its marker present and bypassed. Recursion is bounded at three
+  levels, cycles are refused by identity, and five misconfiguration shapes fail loudly at first
+  capture rather than producing a plausible record. `record(event)` **throws** `AuditWriteException`
+  when the sink fails — the deliberate opposite of FR-15's swallow, because a silent audit trail is a
+  compliance hole. A host may **add** never-capture entries and can never remove one.
 - **`d4np-core` logs, for the first time, and does it through `java.lang.System.Logger`**
   ([ADR-0014](docs/adr/0014-log-through-the-jdk-system-logger.md)). No logging dependency and no new
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through
@@ -133,7 +153,21 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 
 ### Fixed
 
+- `StrategyNotFoundException`'s Javadoc referenced `{@value #MAX_KEYS_IN_MESSAGE}`, a constant that
+  moved to the package-private `KeyDiagnostics` when item 2.4 extracted it. The reference has been
+  dangling since, and `javadoc -Xdoclint:all` fails on it — found by running the Javadoc gate item 8.4
+  will own, not by reading the file.
+
 ### Security
+
+- **Compliance control C-05 is added** — an audit record carries no secret, credential or PII value —
+  and it is a property of the type rather than a discipline: `AuditEvent` exposes no raw value and
+  only `AuditLog.capture` can mint one (item 3.3,
+  [ADR-0022](docs/adr/0022-redact-at-capture-behind-a-typed-event.md)).
+- **Control C-03 moves from partial to enforced.** Its row said no gate forbade the default-locale
+  `String.toLowerCase()`; reintroducing one shows ErrorProne's `StringCaseLocaleUsage` fires and
+  `failOnWarning` fails the build. Under FR-16 that overload is what would let `API_KEY` miss the
+  never-capture list on a Turkish-locale JVM and reach the audit store in clear.
 
 ---
 
