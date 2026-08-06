@@ -38,13 +38,14 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **27 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **29 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows. (This count read **24**
 until item 4.0, having missed ADR-0021 and ADR-0022: both added their rows below without incrementing
 the total, because the `adr-index` check verifies the bijection and every status but **not** this
-number. Corrected here rather than left for a reader to recount, and noted so the drift is visible
-instead of silently absorbed.)
+number. Corrected there rather than left for a reader to recount, and noted so the drift is visible
+instead of silently absorbed. Item 4.1 took it from 27 to **29**, adding two records — the count is
+maintained by hand every time, which is the standing reason it drifts.)
 
 ## Index — decisions taken under this docs system
 
@@ -73,6 +74,8 @@ instead of silently absorbed.)
 | [0021](0021-time-through-an-advice-body-core-can-own.md) | Ship FR-15 as an advice body core can own, and bound what instrumentation is allowed to break | Accepted |
 | [0022](0022-redact-at-capture-behind-a-typed-event.md) | Redact at capture, behind an event no caller can mint | Accepted |
 | [0023](0023-the-owner-approves-this-projects-rfcs.md) | The owner approves this project's RFCs, not the `tech-lead` the protocol names | Accepted |
+| [0024](0024-take-a-jackson-type-in-one-signature.md) | Take a Jackson type in one signature, and keep the module edge non-transitive | Accepted |
+| [0025](0025-render-java-time-as-iso-8601.md) | Render `java.time` as ISO-8601, a fifth setting FR-20 does not name | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

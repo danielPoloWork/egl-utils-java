@@ -19,6 +19,11 @@ _(newest first)_
 
 #### August
 
+- [2026-08-07 — `JsonMapper`, and a claim the RFC could not keep (item 4.1)](2026/08/2026-08-07-json-mapper-hardened.md) —
+  the first production code outside `d4np-core` and the first compile-scope dependency in the repo;
+  ADR-0024 replaces an RFC claim with a measured consumer-module probe, ADR-0025 adds the fifth
+  setting; **C-01's second defence found to be narrower than written — the cause chain still quotes
+  the value**.
 - [2026-08-05 — RFC-0003, and two collisions the specification does not admit to (item 4.0)](2026/08/2026-08-05-rfc-0003-jdbc-and-json-contracts.md) —
   contracts for all five Milestone 4 requirements rather than the two mandated, because FR-05 × FR-06 and
   FR-20 × FR-21 each break in the seam between them; ADR-0023 settles who approves an RFC here;

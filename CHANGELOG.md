@@ -134,6 +134,20 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   `requires` edge — the module still requires nothing but `java.base` — and the output routes through
   whatever backend the consuming application already installed. This is the precedent for every later
   module that needs to log.
+- **`JsonMapper` and `JsonConversionException` — the first public API of `d4np-json`, and the first
+  code this project has shipped outside `d4np-core`** (ROADMAP item 4.1, FR-20, RFC-0003,
+  [ADR-0024](docs/adr/0024-take-a-jackson-type-in-one-signature.md),
+  [ADR-0025](docs/adr/0025-render-java-time-as-iso-8601.md)). `JsonMapper.create()` is Jackson
+  configured once — `JavaTimeModule` registered and **rendered as ISO-8601**, unknown properties
+  tolerated, `INCLUDE_SOURCE_IN_LOCATION` off, and **polymorphic default typing explicitly
+  deactivated**. `readValue(String, Class<T>)` and `writeValueAsString(Object)` are the surface;
+  `withModules(..)` adds host Jackson modules **additively**, and nothing removes a setting. A
+  document that is the literal `null` is refused rather than returned.
+- `d4np-json` now **exports** `it.d4np.utils.json`, and takes `jackson-databind` +
+  `jackson-datatype-jsr310` at **compile** scope — the first compile-scope third-party dependency in
+  the reactor. Every Jackson `requires` on the descriptor is **non-transitive**: a consumer that calls
+  `create()`, `readValue` or `writeValueAsString` declares no Jackson edge of its own, verified by
+  compiling and running a consumer module that never names Jackson. `d4np-core` still sees none of it.
 
 ### Changed
 
@@ -168,6 +182,19 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   `String.toLowerCase()`; reintroducing one shows ErrorProne's `StringCaseLocaleUsage` fires and
   `failOnWarning` fails the build. Under FR-16 that overload is what would let `API_KEY` miss the
   never-capture list on a Turkish-locale JVM and reach the audit store in clear.
+- **The polymorphic-deserialization gadget chain (CWE-502) is closed for `JsonMapper`** — default
+  typing is explicitly deactivated *and* the configured `ObjectMapper` is unreachable, so there is
+  nothing for a consumer to re-enable it on. The threat-model row moves ▢ → ✅ (item 4.1). A
+  `@JsonTypeInfo` annotation on a host's own type is the host's reviewed decision and is deliberately
+  not overridden; that residual is pinned by a named test.
+- **Control C-01 gains its second enforced call site, and one of its two defences is narrowed.** No
+  message `d4np-json` produces carries any part of the document — it is assembled from the target type
+  and Jackson's structural path — and `INCLUDE_SOURCE_IN_LOCATION` is disabled so the source snippet
+  stays out of the `cause` too. **But `InvalidFormatException` quotes the rejected value in its own
+  message and no Jackson setting governs that**, so the cause chain is not safe to render: FR-19's
+  handler (item 7.1) must never put a cause's `getMessage()` into an RFC 7807 body. Document-supplied
+  property names are additionally stripped of ISO control characters, so a crafted `Map` key cannot
+  fold a log line in two.
 
 ---
 

@@ -19,10 +19,66 @@
   <name>JSON</name>
   <description>Pre-configured Jackson with polymorphic default typing off. Keeps Jackson optional for core consumers.</description>
 
+  <properties>
+    <!-- ITEM 4.1 / FR-20. Versions live HERE and not on the parent, per the parent's own rule:
+         "third-party dependency versions arrive with the module that needs them". This module and
+         d4np-spring-adapter are the only ones that may see Jackson at all (spec §3).
+
+         2.22.1 — the LATEST STABLE 2.x — and the reasoning is the OPPOSITE WAY ROUND from item
+         3.1's, because the scope is different. jakarta.validation-api is `provided`, so the HOST's
+         copy wins at run time and ours has to be the floor of the compatibility matrix. Jackson is
+         `compile`: ours is what a plain Jakarta EE / JDBC host actually resolves, so pinning an old
+         release would ship that host an unpatched Jackson — the artifact with the longest CVE
+         history in this dependency set, and the one NFR-11's scan exists to watch.
+
+         The other half of the matrix is paid for by the CODE, not by the pin: a Spring Boot 3.2
+         host's own BOM DOWNGRADES this to 2.15.3, so nothing here may use API newer than that.
+         That is a claim, so it is measured rather than promised —
+
+           mvn -B -pl d4np-json -am -Djackson.version=2.15.3 clean verify
+
+         compiles and runs the whole suite against the floor. Item 4.2 inherits the obligation.
+         Recorded in ROADMAP item 4.1 rather than left as folklore. -->
+    <jackson.version>2.22.1</jackson.version>
+  </properties>
+
+  <!-- The BOM, not three pinned versions: Jackson's artifacts are released together but NOT always
+       with the same version string (jackson-annotations has trailed databind's patch digit for
+       whole minor lines), and the parent's `dependencyConvergence` rule fails the build on exactly
+       that mismatch. Importing the BOM is what makes the pin above one number instead of a set that
+       has to be kept in step by hand — the same reason the parent imports junit-bom. -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>it.d4np</groupId>
       <artifactId>d4np-core</artifactId>
+    </dependency>
+    <!-- COMPILE scope, deliberately, and it is the first compile-scope third-party dependency in
+         this repository. ADR-001 puts Jackson here precisely so that it is NOT optional for this
+         module: `JsonMapper` has no meaning without a mapper to configure, and a `provided`-scope
+         Jackson would recreate FR-14's absent-provider problem for a type whose entire job is to
+         hold a configured object. Core stays at zero — that is what this module buys. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <!-- Declared rather than inherited by luck (item 3.1's Expressly precedent): FR-20 names the
+         JavaTimeModule, and the datatype module is a separate artifact that databind does not pull
+         in. Without it the registration below would not compile. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
     </dependency>
   </dependencies>
 
