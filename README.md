@@ -60,6 +60,17 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   ([ADR-0022](docs/adr/0022-redact-at-capture-behind-a-typed-event.md)). Records land in a host's
   `AuditSink`; `create()` falls back to `System.Logger` at `INFO`, which is a development convenience
   rather than a compliance store.
+- **Jackson is hardened by not being reachable:** `JsonMapper` (FR-20, `d4np-json`) is Jackson
+  configured once — `JavaTimeModule` registered and rendered as ISO-8601, unknown properties
+  tolerated, `INCLUDE_SOURCE_IN_LOCATION` off, and **polymorphic default typing explicitly
+  deactivated**. The configured `ObjectMapper` is never handed out, which is the guarantee: there is
+  nothing to call `activateDefaultTyping` on, so the hardening is a property of the type rather than
+  of how you got it. Customise additively with `JsonMapper.withModules(..)`; read and write with
+  `readValue`/`writeValueAsString`, which raise the unchecked `JsonConversionException` whose message
+  carries the target type and the property path and **never any part of the document**
+  ([ADR-0024](docs/adr/0024-take-a-jackson-type-in-one-signature.md),
+  [ADR-0025](docs/adr/0025-render-java-time-as-iso-8601.md)). `d4np-core` still sees no Jackson at
+  all — that separation is what this module exists for.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
@@ -83,7 +94,7 @@ setup.
 | 1 | Project bootstrap & CI | ✅ done |
 | 2 | core foundations | ✅ done |
 | 3 | core cross-cutting | ✅ done |
-| 4 | json and jdbc | ⏳ planned |
+| 4 | json and jdbc | 🚧 in progress |
 | 5 | concurrent | ⏳ planned |
 | 6 | security | ⏳ planned |
 | 7 | adapters and test support | ⏳ planned |
