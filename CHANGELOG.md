@@ -168,6 +168,29 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 - **No new module edge and no new dependency.** FR-21's three types join the package `d4np-json`
   already exports; the descriptor is untouched, and a consumer that never names a Jackson type still
   declares no Jackson `requires` of its own.
+- **`SimpleJdbcExecutor`, `RowMapper<T>` and `JdbcAccessException` — the first public API of
+  `d4np-jdbc`** (ROADMAP item 4.3, FR-05, NFR-03, RFC-0003,
+  [ADR-0028](docs/adr/0028-the-fr-05-operation-set-and-what-it-refuses.md),
+  [ADR-0029](docs/adr/0029-annotate-the-varargs-so-a-null-parameter-compiles.md)). Three operations
+  — `query` returning an unmodifiable `List<T>`, `queryOne` returning `Optional<T>`, and `update`
+  returning the affected count — each taking `(String sql, ..., Object... params)` and binding
+  through a `PreparedStatement`. **No `java.sql.Statement` is created anywhere in the module**, so a
+  parameterless call is still prepared and there is no overload that accepts pre-interpolated SQL.
+  `queryOne` **refuses a second row** instead of returning the first. A `RowMapper` that returns
+  `null` raises `IllegalStateException`, and a `DataSource` that hands back no connection is refused
+  rather than dereferenced (control C-02).
+- **Two connection lifecycles, and the difference is who closes it.**
+  `SimpleJdbcExecutor.on(DataSource)` takes a connection per operation and closes it — FR-05's
+  try-with-resources promise, asserted by asking the driver whether each connection it handed out is
+  closed. `on(Connection)` borrows one and never closes it, which is the form FR-06's transaction
+  runner will use (item 4.4). The `DataSource` form carries an `@apiNote`: captured into a
+  transaction block it takes a *second* connection, so the work commits outside the transaction.
+- **`d4np-jdbc` now exports `it.d4np.utils.jdbc` and takes `requires transitive java.sql`** — the
+  only transitive edge in the repository, because a consumer *implements* `RowMapper` and cannot
+  write that lambda without naming `ResultSet` and `SQLException`. **The module still has no
+  third-party dependency at any scope a consumer resolves:** H2 is test scope, absent from the
+  descriptor, and reached through `DriverManager` so that no type here — production, test or
+  benchmark — names a driver class.
 
 ### Changed
 
@@ -229,6 +252,19 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   through the same routine every message uses — because a `toString()` reaches a log far more
   casually than an exception reaches a client, and with a `Map` target every document key is a known
   property ([ADR-0027](docs/adr/0027-a-partial-update-renders-names-not-values.md)).
+- **SQL injection via string concatenation is closed for `SimpleJdbcExecutor`** — the threat-model
+  row moves ▢ → ✅ (item 4.3). Defended by construction: every operation binds through a
+  `PreparedStatement`, no overload omits the parameter slot, and no `java.sql.Statement` is created
+  anywhere in the module. Asserted by running rather than reading — an injection payload is stored
+  as a string with the table intact, and every operation runs through a `Connection` proxy that
+  fails the test if `createStatement` is ever called. **Residual, stated:** a caller that
+  concatenates the SQL string before passing it in is beyond what any Java API can stop.
+- **Control C-01 gains its fourth call site, and its second independent provider.** A
+  `JdbcAccessException` message is a fixed operation label plus the driver's SQLState and vendor
+  code; the driver's own message — which H2 demonstrably fills with **both the bound parameter and
+  the whole `insert` statement** — survives only as the cause. Two providers, two message channels,
+  one rule, which is what makes item 7.1's "never render a cause's `getMessage()`" a property of the
+  boundary handler rather than a workaround for one library.
 
 ---
 

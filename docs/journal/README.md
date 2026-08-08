@@ -19,6 +19,11 @@ _(newest first)_
 
 #### August
 
+- [2026-08-08 — `SimpleJdbcExecutor`, and a gate that measured its way out of existing (item 4.3)](2026/08/2026-08-08-simple-jdbc-executor.md) —
+  FR-05's parameterized-only executor opens `d4np-jdbc`, the first module with a public API and no
+  third-party dependency at all; the SQL-concatenation threat-model row moves ▢ → ✅; **RFC-0003's
+  promised NFR-03 CI gate is filed as item 8.8 rather than shipped, on a measured 2.3x ratio spread
+  at CI's sample size**; ADR-0029 records a nullability annotation that has to say the wrong thing.
 - [2026-08-07 — `ObjectMapperExtensions`, and a leak the wrapping rule did not reach (item 4.2)](2026/08/2026-08-07-object-mapper-extensions.md) —
   FR-21's conversion, partial mapping and type token over the mapper 4.1 built; ADR-0026 catches the
   **unchecked** `IllegalArgumentException` `convertValue` raises, which the RFC's checked-exception
