@@ -19,10 +19,44 @@
   <name>JDBC</name>
   <description>Programmatic JDBC helpers — parameterized statements only, by construction. JDBC API only, no drivers.</description>
 
+  <properties>
+    <!-- ITEM 4.3 / NFR-03. This module owns src/bench/java, so it must opt in: the parent defaults
+         `jmh.skip` to true and `-Pjmh` would otherwise COMPILE the benchmark and never run it — a
+         harness that produces no number while the job reports success. `consistency_lint.py`'s
+         harness-opt-in check asserts this pairing in both directions. No `jcstress.skip` here: see
+         SimpleJdbcExecutor's thread-safety section for why no concurrency harness is owed. -->
+    <jmh.skip>false</jmh.skip>
+
+    <!-- H2 2.3.232, the LATEST stable, at TEST scope only (spec §3: "JDBC API only, no drivers").
+         The reasoning is item 4.1's inverted once more, and the inversion is what makes it a
+         decision rather than a copy: Jackson is pinned to the latest because at `compile` scope
+         ours is what a consumer resolves; jakarta.validation is pinned to the matrix FLOOR because
+         at `provided` scope the host's copy wins. A test-scope driver reaches no consumer at all,
+         so neither argument applies and the only live consideration is NFR-11's scan, which reads
+         test scope too — so: latest.
+
+         Nothing in this module names an H2 type, and that is verified rather than intended. The
+         tests reach H2 exclusively through `DriverManager` and a `jdbc:h2:mem:` URL, so the driver
+         is discovered by the service loader and the compiler never sees it. A test that imported
+         `org.h2.*` would compile, which is why the tests use a hand-written DataSource over
+         DriverManager instead of H2's own JdbcDataSource. -->
+    <h2.version>2.3.232</h2.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>it.d4np</groupId>
       <artifactId>d4np-core</artifactId>
+    </dependency>
+    <!-- The only third-party artifact this module has, and it is invisible to consumers: test
+         scope, no `requires` on the descriptor, nothing on the compile classpath. FR-05's suite and
+         NFR-03's benchmark both need a real database that starts in-process; H2 in-memory is the
+         one the specification names. -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>${h2.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

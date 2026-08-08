@@ -84,6 +84,20 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   a Jackson major release from becoming ours
   ([ADR-0026](docs/adr/0026-rewrite-jacksons-unchecked-conversion-failure.md),
   [ADR-0027](docs/adr/0027-a-partial-update-renders-names-not-values.md)).
+- **SQL injection is closed by construction, not by advice:** `SimpleJdbcExecutor` (FR-05,
+  `d4np-jdbc`) has no operation that takes SQL without a parameter slot and **creates no
+  `java.sql.Statement` anywhere**, so a zero-parameter call is still a `PreparedStatement` and
+  concatenation is never the convenient path. `query` / `queryOne` / `update` map rows through a
+  `RowMapper<T>` you write — a lambda over the same `ResultSet`, which is why the mapping costs
+  **≤ 10% over a hand-written loop** (NFR-03, measured). `queryOne` **refuses a second row** rather
+  than returning the first, because a duplicate in a supposedly-unique column otherwise becomes an
+  application reading one of two records at random. `on(dataSource)` takes and closes a connection
+  per operation; `on(connection)` borrows one and never closes it, which is the form used inside a
+  transaction. Failures are the unchecked `JdbcAccessException` carrying the SQLState and vendor
+  code and **never the SQL or a parameter**
+  ([ADR-0028](docs/adr/0028-the-fr-05-operation-set-and-what-it-refuses.md),
+  [ADR-0029](docs/adr/0029-annotate-the-varargs-so-a-null-parameter-compiles.md)). The module has
+  **no third-party dependency at all** — the JDBC API ships in the JDK, and H2 is test scope.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

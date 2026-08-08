@@ -84,6 +84,12 @@
     <!-- Item 1.7 — the ADR-001 dependency policy as a build gate (NFR-08). Latest stable. -->
     <enforcer.plugin.version>3.6.3</enforcer.plugin.version>
 
+    <!-- ITEM 4.3. Pinned because the plugin is now CONFIGURED rather than merely resolvable: see
+         the pluginManagement entry below for the three JDK documentation tags it has to be told
+         about. Wiring `javadoc` into CI is still ROADMAP item 8.7's job — this pins and configures
+         the tool, it does not add the gate. -->
+    <javadoc.plugin.version>3.12.0</javadoc.plugin.version>
+
     <!-- Item 1.8 — the two NFR measurement harnesses of spec §6. Latest stable of each; JMH 1.37
          is also the floor the spec names ("JMH 1.37+"). -->
     <jmh.version>1.37</jmh.version>
@@ -341,6 +347,45 @@
               </goals>
             </execution>
           </executions>
+        </plugin>
+        <!-- ITEM 4.3 / FR-05. `@apiNote`, `@implSpec` and `@implNote` are the JDK's own
+             documentation tags — the JDK library itself uses all three — but the standard doclet
+             REJECTS them unless it is told they exist, with `error: unknown tag: apiNote`. So a
+             project that writes one has to declare it, and this project now writes one: RFC-0003
+             §FR-06 asks item 4.3 for an `@apiNote` on `SimpleJdbcExecutor.on(DataSource)` naming
+             the transaction trap, which is the kind of caveat the tag exists to set apart from the
+             method's ordinary description.
+
+             Measured before being written down: without this block, `javadoc -Xdoclint:all
+             -Xwerror` fails on both toolchains with exactly those two errors; with it, both are
+             clean. The `a` placement means "all" — overview, package, type, method and field.
+
+             This CONFIGURES the tool and deliberately does not GATE it. Item 8.7 owns adding the
+             `javadoc` run to CI and repairing the `{@value}` reference that breaks it today; doing
+             half of that here is what its own text warns against. -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${javadoc.plugin.version}</version>
+          <configuration>
+            <tags>
+              <tag>
+                <name>apiNote</name>
+                <placement>a</placement>
+                <head>API Note:</head>
+              </tag>
+              <tag>
+                <name>implSpec</name>
+                <placement>a</placement>
+                <head>Implementation Requirements:</head>
+              </tag>
+              <tag>
+                <name>implNote</name>
+                <placement>a</placement>
+                <head>Implementation Note:</head>
+              </tag>
+            </tags>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
