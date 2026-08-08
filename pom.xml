@@ -71,7 +71,7 @@
     <spotless.plugin.version>2.44.5</spotless.plugin.version>
     <google.java.format.version>1.27.0</google.java.format.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
-    <checkstyle.version>10.26.1</checkstyle.version>
+    <checkstyle.version>13.9.0</checkstyle.version>
     <!-- Item 1.11 — ErrorProne + NullAway. The PAIR is the unit of choice, not two independent
          latest-stables: 2.50.0 + NullAway 0.12.7 was measured to fail with
          `ProvisionException: Failed to initialize com.uber.nullaway.NullAway`, because NullAway
