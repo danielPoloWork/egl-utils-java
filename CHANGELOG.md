@@ -191,6 +191,26 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   third-party dependency at any scope a consumer resolves:** H2 is test scope, absent from the
   descriptor, and reached through `DriverManager` so that no type here — production, test or
   benchmark — names a driver class.
+- **`JdbcTxRunner`, `TxIsolation`, `TxCallback<T>` and `TxVoidCallback` — FR-06's programmatic
+  transactions** (ROADMAP item 4.4, RFC-0003,
+  [ADR-0030](docs/adr/0030-the-two-channels-out-of-a-transaction-body.md),
+  [ADR-0031](docs/adr/0031-one-nesting-detector-for-the-whole-jvm.md),
+  [ADR-0032](docs/adr/0032-name-the-void-transaction-form-differently.md)). `inTransaction(body)`
+  commits on a normal return and rolls back on **any `Throwable`, including an `Error`**;
+  `inTransactionWithoutResult(body)` is the same without a value. The transactional `Connection` is
+  passed to the body and is never ambient. **A returned `Result.Err` commits** — the exception
+  channel demarcates the transaction, the value channel does not — and a returned `null` is refused
+  with the transaction rolled back first. Scoped to hosts without a transaction manager; on Spring,
+  use Spring's.
+- **`TxIsolation` replaces JDBC's `int` constants**, so `TRANSACTION_NONE` and any other `int` cannot
+  be passed to a transaction runner. `DEFAULT` means `setTransactionIsolation` is **never called** —
+  not "read committed" — and a level that *is* applied is restored, together with `autoCommit`,
+  before the connection returns to the pool.
+- **Nesting is refused** with `IllegalStateException`, by one detector shared across every runner in
+  the JVM: two pools cannot be nested either, because two uncoordinated transactions give no
+  atomicity and the nested shape hides that. Savepoints and suspension are deliberately absent.
+- **`d4np-jdbc` opts into `jcstress`** — the first module outside core to owe a concurrency harness,
+  because `JdbcTxRunner`'s nesting detector is the first real per-thread state here.
 
 ### Changed
 
@@ -265,6 +285,11 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   the whole `insert` statement** — survives only as the cause. Two providers, two message channels,
   one rule, which is what makes item 7.1's "never render a cause's `getMessage()`" a property of the
   boundary handler rather than a workaround for one library.
+- **C-01 reaches the library's own log lines for the first time** (item 4.4). FR-06's two lines — a
+  rollback at `DEBUG`, a failed rollback at `WARNING` — name the failure's **type** and an SQLState,
+  never its message, never SQL and never a parameter. Asserted against a body whose exception message
+  carries a credential. This is the weaker of the two boundaries precisely because nobody reviews a
+  log line for disclosure.
 
 ---
 

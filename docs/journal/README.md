@@ -19,6 +19,12 @@ _(newest first)_
 
 #### August
 
+- [2026-08-08 — `JdbcTxRunner`, and a specified surface that does not compile (item 4.4)](2026/08/2026-08-08-jdbc-tx-runner.md) —
+  FR-06's transactions, and the three places RFC-0003's pinned design meets Java: an overload pair
+  that is **ambiguous for the most idiomatic call** (ADR-0032, Spring's own fix), two approved
+  documents that cannot both be read literally about what propagates (ADR-0030), and a nesting
+  detector whose scope the RFC never stated (ADR-0031); **the first jcstress harness owed outside
+  core — and made to fail once, on purpose, to prove it can**.
 - [2026-08-08 — `SimpleJdbcExecutor`, and a gate that measured its way out of existing (item 4.3)](2026/08/2026-08-08-simple-jdbc-executor.md) —
   FR-05's parameterized-only executor opens `d4np-jdbc`, the first module with a public API and no
   third-party dependency at all; the SQL-concatenation threat-model row moves ▢ → ✅; **RFC-0003's
