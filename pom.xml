@@ -60,7 +60,7 @@
          surefire 3.6.0-M1 were all offered), and a library that promises binary compatibility
          must not pin an -M/-RC build. -->
     <junit.version>5.12.2</junit.version>
-    <assertj.version>3.27.3</assertj.version>
+    <assertj.version>3.27.7</assertj.version>
     <!-- surefire MUST be pinned: Maven's default binding can be a 2.x surefire that does not know
          the JUnit Platform, so JUnit 5 tests are SILENTLY NOT RUN and the build still passes. That
          is the same vacuous-green class as the -Pjmh profile finding in item 1.2. -->
