@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The shapes FR-20's tests read and write — one file, because two test classes need the same types
- * and a second copy of a fixture is a second contract to keep in step (core's {@code AuditFixtures}
- * precedent).
+ * The shapes FR-20's and FR-21's tests read and write — one file, because two test classes need the
+ * same types and a second copy of a fixture is a second contract to keep in step (core's {@code
+ * AuditFixtures} precedent).
  *
  * <p>Every nested type is <strong>public</strong> on purpose, and under the module system that is
  * load-bearing rather than stylistic: Jackson reaches a type reflectively from its own module,
@@ -62,6 +62,33 @@ final class JsonFixtures {
 
   /** Self-referential, so a test can build a path of any depth without a fixture per level. */
   public record Node(Node child, int value) {}
+
+  /**
+   * A narrower view of {@link Order} — FR-21's ordinary conversion target.
+   *
+   * <p>It drops {@code quantity} rather than renaming anything, so a successful conversion is also
+   * evidence that {@code convert} inherited the mapper's leniency about a property the target does
+   * not declare.
+   */
+  public record Sku(String sku) {}
+
+  /** A nested shape, so a conversion can be shown to reach past the top level. */
+  public record Basket(String reference, List<Order> lines) {}
+
+  /** {@link Basket}'s view: the same nesting with {@link Sku} where {@link Order} was. */
+  public record BasketView(String reference, List<Sku> lines) {}
+
+  /** {@link Timed} with text components, so a conversion's date rendering is readable. */
+  public record TimedView(String at, String on) {}
+
+  /**
+   * {@link Credentials} with a component that cannot hold what the source carries.
+   *
+   * <p>Converting one into the other is the FR-21 path on which Jackson raises an
+   * <strong>unchecked</strong> {@code IllegalArgumentException} whose message quotes {@code
+   * hunter2} — the leak ADR-0026 closes.
+   */
+  public record MistypedCredentials(String user, int password) {}
 
   /**
    * A base type the <em>host</em> annotated, which is the case disabling default typing does not

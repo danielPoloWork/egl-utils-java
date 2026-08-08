@@ -71,6 +71,19 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   ([ADR-0024](docs/adr/0024-take-a-jackson-type-in-one-signature.md),
   [ADR-0025](docs/adr/0025-render-java-time-as-iso-8601.md)). `d4np-core` still sees no Jackson at
   all — that separation is what this module exists for.
+- **A PATCH endpoint can tell `null` from absent:** `ObjectMapperExtensions` (FR-21, `d4np-json`)
+  adds deep conversion and partial mapping over the same hardened mapper.
+  `readPartial(json, body, Order.class)` returns a `PartialUpdate<Order>` carrying the instance
+  **and** the property names the document actually contained — so `{"a": null}` (a client clearing a
+  field) and `{}` (a client not mentioning it) stop being the same request. It **refuses an unknown
+  property** while ordinary reads stay lenient: tolerating an unknown *addition* and refusing an
+  unknown *instruction* are different jobs, so the strictness is per operation rather than per
+  mapper. `convert(json, source, Target.class)` converts between two POJO shapes, and
+  `convert(json, source, new JsonTypeToken<List<Target>>() {})` does it for a generic target through
+  this library's own type token — no Jackson type reaches a published signature, which is what keeps
+  a Jackson major release from becoming ours
+  ([ADR-0026](docs/adr/0026-rewrite-jacksons-unchecked-conversion-failure.md),
+  [ADR-0027](docs/adr/0027-a-partial-update-renders-names-not-values.md)).
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

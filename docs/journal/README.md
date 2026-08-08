@@ -19,6 +19,11 @@ _(newest first)_
 
 #### August
 
+- [2026-08-07 — `ObjectMapperExtensions`, and a leak the wrapping rule did not reach (item 4.2)](2026/08/2026-08-07-object-mapper-extensions.md) —
+  FR-21's conversion, partial mapping and type token over the mapper 4.1 built; ADR-0026 catches the
+  **unchecked** `IllegalArgumentException` `convertValue` raises, which the RFC's checked-exception
+  wrapping rule never reached, and ADR-0027 keeps a record's generated `toString()` from printing a
+  payload; **FR-20 and FR-21 both closed — `d4np-json` is feature-complete**.
 - [2026-08-07 — `JsonMapper`, and a claim the RFC could not keep (item 4.1)](2026/08/2026-08-07-json-mapper-hardened.md) —
   the first production code outside `d4np-core` and the first compile-scope dependency in the repo;
   ADR-0024 replaces an RFC claim with a measured consumer-module probe, ADR-0025 adds the fifth

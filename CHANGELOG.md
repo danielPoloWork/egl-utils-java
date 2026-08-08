@@ -148,6 +148,26 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   the reactor. Every Jackson `requires` on the descriptor is **non-transitive**: a consumer that calls
   `create()`, `readValue` or `writeValueAsString` declares no Jackson edge of its own, verified by
   compiling and running a consumer module that never names Jackson. `d4np-core` still sees none of it.
+- **`ObjectMapperExtensions`, `PartialUpdate<T>` and `JsonTypeToken<T>` — FR-21, over the same
+  hardened mapper** (ROADMAP item 4.2, RFC-0003,
+  [ADR-0026](docs/adr/0026-rewrite-jacksons-unchecked-conversion-failure.md),
+  [ADR-0027](docs/adr/0027-a-partial-update-renders-names-not-values.md)).
+  `readPartial(mapper, json, Class<T>)` returns the instance **and** the top-level property names the
+  document contained, so `{"a": null}` and `{}` stop being the same request — `isPresent("a")` with a
+  `null` value is an explicit null, `!isPresent("a")` is an absence. It **refuses an unknown
+  property** at every depth while `FAIL_ON_UNKNOWN_PROPERTIES` stays disabled for every other read:
+  leniency is for a document you do not own, strictness is for an instruction, and the check is per
+  operation rather than per mapper. It refuses a document that is not a JSON object, and the literal
+  `null`, on the same C-02 grounds `readValue` does. `convert(mapper, source, Class<T>)` is deep
+  conversion between POJO shapes; `convert(mapper, source, JsonTypeToken<T>)` is the same for a
+  generic target, through **this library's own token** rather than Jackson's `TypeReference` — so no
+  Jackson type reaches a published signature and a Jackson major release cannot force ours. A token
+  over a type variable is refused at construction rather than resolved to its bound, and a conversion
+  that would answer `null` is refused rather than returned. `PartialUpdate.toString()` renders the
+  value's **type** and its property names, never the value.
+- **No new module edge and no new dependency.** FR-21's three types join the package `d4np-json`
+  already exports; the descriptor is untouched, and a consumer that never names a Jackson type still
+  declares no Jackson `requires` of its own.
 
 ### Changed
 
@@ -195,6 +215,20 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   handler (item 7.1) must never put a cause's `getMessage()` into an RFC 7807 body. Document-supplied
   property names are additionally stripped of ISO control characters, so a crafted `Map` key cannot
   fold a log line in two.
+- **Control C-01 gains a third call site and a leak channel the rule as written did not reach**
+  (item 4.2, [ADR-0026](docs/adr/0026-rewrite-jacksons-unchecked-conversion-failure.md)). RFC-0003
+  phrased the wrapping rule against the *checked* `JsonProcessingException`; FR-21's `convert` never
+  raises one, because `ObjectMapper.convertValue` rethrows Jackson's failure as an **unchecked**
+  `IllegalArgumentException` carrying Jackson's own message — which quotes the rejected value.
+  Nothing in the language or in any gate here would have flagged letting it through, and it would
+  have landed on FR-19's **500** fallback rather than 400. It is caught and rewritten from the target
+  type and the structural path. The rule is restated in the form that holds: **no exception leaves
+  this module carrying text this library did not write**, whatever its checked-ness.
+- **The control stops being only about exceptions.** `PartialUpdate.toString()` names the value's
+  type and lists its property names rather than rendering the value, and those names are bounded
+  through the same routine every message uses — because a `toString()` reaches a log far more
+  casually than an exception reaches a client, and with a `Map` target every document key is a known
+  property ([ADR-0027](docs/adr/0027-a-partial-update-renders-names-not-values.md)).
 
 ---
 
