@@ -98,6 +98,20 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   ([ADR-0028](docs/adr/0028-the-fr-05-operation-set-and-what-it-refuses.md),
   [ADR-0029](docs/adr/0029-annotate-the-varargs-so-a-null-parameter-compiles.md)). The module has
   **no third-party dependency at all** — the JDBC API ships in the JDK, and H2 is test scope.
+- **Transactions without a transaction manager:** `JdbcTxRunner` (FR-06, `d4np-jdbc`) is for hosts
+  that have a `DataSource` and no Spring — on Spring, use Spring's `TransactionTemplate`.
+  `inTransaction(c -> …)` commits on a normal return and **rolls back on any `Throwable`, including
+  an `Error`**; `inTransactionWithoutResult(c -> { … })` is the same without a value. The
+  transactional `Connection` is **passed to the body, never ambient**, so an executor built over it
+  runs in that transaction because it is the same connection — and a `ThreadLocal` cannot silently
+  change what a call site means. **A returned `Result.Err` commits:** the exception channel
+  demarcates the transaction, the value channel does not, and a body that must roll back on a
+  business rule throws. Isolation is a `TxIsolation` enum whose `DEFAULT` means *untouched*, not
+  "read committed"; both it and `autoCommit` are restored before the connection goes back to the
+  pool. Nesting is refused with `IllegalStateException`
+  ([ADR-0030](docs/adr/0030-the-two-channels-out-of-a-transaction-body.md),
+  [ADR-0031](docs/adr/0031-one-nesting-detector-for-the-whole-jvm.md),
+  [ADR-0032](docs/adr/0032-name-the-void-transaction-form-differently.md)).
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

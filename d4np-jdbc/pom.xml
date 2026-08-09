@@ -27,6 +27,13 @@
          SimpleJdbcExecutor's thread-safety section for why no concurrency harness is owed. -->
     <jmh.skip>false</jmh.skip>
 
+    <!-- ITEM 4.4 / FR-06. `JdbcTxRunner` is the first type in this repository outside core with real
+         per-thread state — the nesting detector — so it is the first here that spec §6's rule can
+         bite on: a thread-safety claim without a named jcstress test is not a claim. Items 3.1, 4.1
+         and 4.3 each recorded the opposite conclusion for a stateless type, which is what makes this
+         opt-in a decision rather than a default. -->
+    <jcstress.skip>false</jcstress.skip>
+
     <!-- H2 2.3.232, the LATEST stable, at TEST scope only (spec §3: "JDBC API only, no drivers").
          The reasoning is item 4.1's inverted once more, and the inversion is what makes it a
          decision rather than a copy: Jackson is pinned to the latest because at `compile` scope
