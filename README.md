@@ -112,6 +112,21 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   ([ADR-0030](docs/adr/0030-the-two-channels-out-of-a-transaction-body.md),
   [ADR-0031](docs/adr/0031-one-nesting-detector-for-the-whole-jvm.md),
   [ADR-0032](docs/adr/0032-name-the-void-transaction-form-differently.md)).
+- **Paging whose sort clause cannot be skipped:** `PageRequest` / `PageResponse<T>` (FR-07,
+  `d4np-jdbc`) bound the page (`page ≥ 0`, `1 ≤ size ≤ 200`, the ceiling a parameter rather than a
+  system property) and close the half of the injection story a `PreparedStatement` cannot: a column
+  name is never a bind parameter, so an `ORDER BY` is built by concatenation. **`PageRequest`
+  publishes no accessor for the sort it carries** — `request.validatedAgainst(Set.of("orderDate",
+  "total"))` is the only way to get the properties at all, and it takes the repository's allowlist as
+  its argument, so there is no path on which a repository forgets to check. A rejected property
+  raises `ValidationException` (FR-19's **400**, not the 500 an `IllegalArgumentException` would
+  get), names what was refused and never the allowlist, and reports **every** rejected property
+  rather than the first. Matching is exact and case-sensitive, because identifier folding is
+  vendor-specific and because an exactly-matched name is the repository's own string.
+  `PageResponse.of(rows, request, total)` derives `totalPages()` and `hasNext()` instead of storing
+  them, counts in `long` throughout, and renders the page's *shape* in `toString()` and never its
+  rows ([ADR-0033](docs/adr/0033-publish-no-accessor-for-the-unvalidated-sort.md),
+  [ADR-0034](docs/adr/0034-mint-a-validation-failure-from-outside-core.md)).
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
@@ -135,7 +150,7 @@ setup.
 | 1 | Project bootstrap & CI | ✅ done |
 | 2 | core foundations | ✅ done |
 | 3 | core cross-cutting | ✅ done |
-| 4 | json and jdbc | 🚧 in progress |
+| 4 | json and jdbc | ✅ done |
 | 5 | concurrent | ⏳ planned |
 | 6 | security | ⏳ planned |
 | 7 | adapters and test support | ⏳ planned |

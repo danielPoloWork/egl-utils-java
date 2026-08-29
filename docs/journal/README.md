@@ -19,6 +19,13 @@ _(newest first)_
 
 #### August
 
+- [2026-08-29 — `PageRequest`, a type that will not tell you what it is carrying (item 4.5)](2026/08/2026-08-29-page-request-response.md) —
+  FR-07's paging closes the half of the injection story a `PreparedStatement` cannot reach; ADR-0033
+  removes the sort accessor so the allowlist is the **only** route to the client's property strings,
+  and ADR-0034 opens a second door into `ValidationException` because the throw RFC-0003 specified
+  did not compile from another module; a drop-table test that nearly shipped as a false negative,
+  because H2's error message named only the first of the two statements it ran; **Milestone 4
+  complete**.
 - [2026-08-08 — `JdbcTxRunner`, and a specified surface that does not compile (item 4.4)](2026/08/2026-08-08-jdbc-tx-runner.md) —
   FR-06's transactions, and the three places RFC-0003's pinned design meets Java: an overload pair
   that is **ambiguous for the most idiomatic call** (ADR-0032, Spring's own fix), two approved
