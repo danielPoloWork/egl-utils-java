@@ -19,13 +19,13 @@ _(newest first)_
 
 #### August
 
-- [2026-08-29 — `PageRequest`, a type that will not tell you what it is carrying (item 4.5)](2026/08/2026-08-29-page-request-response.md) —
-  FR-07's paging closes the half of the injection story a `PreparedStatement` cannot reach; ADR-0033
-  removes the sort accessor so the allowlist is the **only** route to the client's property strings,
-  and ADR-0034 opens a second door into `ValidationException` because the throw RFC-0003 specified
-  did not compile from another module; a drop-table test that nearly shipped as a false negative,
-  because H2's error message named only the first of the two statements it ran; **Milestone 4
-  complete**.
+- [2026-08-30 — RFC-0004, and a requirement that names a type the module may not import (item 5.0)](2026/08/2026-08-30-rfc-0004-concurrency-contracts.md) —
+  Milestone 5 opens; FR-08/FR-09/FR-10 pinned with **every surface claim compiled before it was
+  written**, which is item 4.4's lesson turned into procedure. FR-09's *"MDC context propagation"*
+  names a type this module may not import at any scope — and **ADR-0014 predicted the moment when it
+  made the decision**; a `close()` measured being silently replaced by the JDK 19 interface default
+  (**3017 ms** against a 500 ms budget); and an overload pair that is **not** ambiguous but changes
+  the returned type when a body gains braces. The threat model gains its first RFC-added row.
 - [2026-08-08 — `JdbcTxRunner`, and a specified surface that does not compile (item 4.4)](2026/08/2026-08-08-jdbc-tx-runner.md) —
   FR-06's transactions, and the three places RFC-0003's pinned design meets Java: an overload pair
   that is **ambiguous for the most idiomatic call** (ADR-0032, Spring's own fix), two approved
