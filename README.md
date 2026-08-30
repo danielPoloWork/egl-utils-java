@@ -141,6 +141,21 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   uncaught-exception handler. NFR-05's named jcstress harness races a submit against a close and was
   **shown to go red under a deliberate defect before its green run was trusted**
   ([ADR-0035](docs/adr/0035-declare-autocloseable-so-the-override-is-legal.md)).
+- **Async work that cannot carry one request's context into the next:** `AsyncExecutor` (FR-09,
+  NFR-02, `d4np-concurrent`) wraps any `Executor` — a `ManagedThreadPool`, a `ForkJoinPool`, a
+  virtual-thread executor — and returns `CompletableFuture`s. The requirement names SLF4J's **MDC**,
+  which a module with no third-party dependency at any scope cannot import, so the library publishes
+  a **context SPI** and the host binds it to MDC in four lines (given verbatim in the Javadoc); the
+  default carries nothing and says so, rather than reaching for `org.slf4j.MDC` reflectively and
+  propagating only when it happens to be on the classpath. **The interesting failure is not the
+  missing context but the surviving one:** a pooled worker is reused, so `install()` returns a
+  `Scope` that **restores what was there before** — never clears — and `AsyncExecutor` closes it even
+  when the body throws. Two methods, `supply` and `run`, deliberately not one overloaded `submit`:
+  the overload pair is *not* ambiguous, it silently returns `CompletableFuture<Void>` when a body
+  gains braces. **Every failure arrives through the future, including rejection** — the JDK's own
+  `supplyAsync` lets a `RejectedExecutionException` escape on the submitting thread, which would give
+  one operation two failure paths
+  ([ADR-0036](docs/adr/0036-carry-context-through-an-spi-that-restores.md)).
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
