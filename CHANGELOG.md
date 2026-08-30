@@ -211,6 +211,29 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   atomicity and the nested shape hides that. Savepoints and suspension are deliberately absent.
 - **`d4np-jdbc` opts into `jcstress`** — the first module outside core to owe a concurrency harness,
   because `JdbcTxRunner`'s nesting detector is the first real per-thread state here.
+- **`PageRequest`, `PageSort` and `PageResponse<T>` — FR-07's paging, with the sort clause closed by
+  construction** (ROADMAP item 4.5, RFC-0003,
+  [ADR-0033](docs/adr/0033-publish-no-accessor-for-the-unvalidated-sort.md),
+  [ADR-0034](docs/adr/0034-mint-a-validation-failure-from-outside-core.md)).
+  `PageRequest.of(page, size, sort)` bounds `page ≥ 0` and `1 ≤ size ≤ 200`, with
+  `of(page, size, sort, maxSize)` as the configurable ceiling — a parameter, never a system property.
+  **`PageRequest` publishes no accessor for the sort it carries:** `validatedAgainst(allowed)` takes
+  the repository's allowlist and is the only member that returns the properties, so an `ORDER BY` —
+  the one clause a column name can never be a bind parameter for — cannot be built from unchecked
+  client input. A rejected property raises `ValidationException` (FR-19's **400**), names what was
+  refused and never the allowlist, and reports every rejection rather than the first. Matching is
+  exact and case-sensitive; at most 8 properties, and none twice.
+- **`PageResponse<T>` derives `totalPages()` and `hasNext()`** rather than storing them, counts in
+  `long` end to end, copies its content with `List.copyOf` (which rejects a `null` row), and renders
+  the page's shape in `toString()` and never its rows. Neither type is `Serializable`.
+- **`ValidationException.of(validated, violations)` — a public mint in `d4np-core`**
+  ([ADR-0034](docs/adr/0034-mint-a-validation-failure-from-outside-core.md)). A module that reaches a
+  validation verdict without a Bean Validation provider — FR-07's allowlist is the first — can now
+  throw the type FR-19 maps to 400. Every string it carries is stripped of ISO control characters and
+  truncated, and the message lists at most 20 violations, inside the exception rather than at each
+  caller.
+- `PageRequest.offset()` returns `(long) page * size`, which is the one derived value a caller would
+  otherwise compute with a silent `int` overflow.
 
 ### Changed
 

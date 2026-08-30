@@ -164,7 +164,7 @@ public final class Validator {
   public <T> T requireValid(T candidate, Class<?>... groups) {
     List<String> violations = violations(candidate, groups);
     if (!violations.isEmpty()) {
-      throw new ValidationException(candidate.getClass().getSimpleName(), violations);
+      throw ValidationException.fromProvider(candidate.getClass().getSimpleName(), violations);
     }
     return candidate;
   }
