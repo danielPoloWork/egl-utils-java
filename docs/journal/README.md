@@ -19,6 +19,12 @@ _(newest first)_
 
 #### August
 
+- [2026-08-30 — FR-10's interface, and a token that is safer absent (item 5.3)](2026/08/2026-08-30-distributed-lock.md) —
+  **Milestone 5 closes.** An interface-only item, so the deliverable beside three types is a contract test
+  against a reference implementation in test scope — and the load-bearing one, *a stale holder must not
+  release the current holder's lock*, was **made to fail on purpose first**. ADR-0037: a fencing token that
+  restarts is **worse than one that is absent**, so empty is a required answer. ADR-0038 declines a method
+  the RFC permitted, on an `Optional` collision and the third measurement of the value/void overload trap.
 - [2026-08-30 — FR-09's async wrapper, and a leak test that passed against the leak (item 5.2)](2026/08/2026-08-30-async-executor.md) —
   FR-09 names SLF4J's MDC, which this module may not import, so it publishes a **context SPI** whose
   `Scope` restores rather than clears (ADR-0036). **The leak test RFC-0004 and the threat model both

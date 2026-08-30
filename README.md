@@ -156,6 +156,19 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   `supplyAsync` lets a `RejectedExecutionException` escape on the submitting thread, which would give
   one operation two failure paths
   ([ADR-0036](docs/adr/0036-carry-context-through-an-spi-that-restores.md)).
+- **A distributed lock whose interface admits what leases cannot do:** `DistributedLock` /
+  `LockHandle` (FR-10, `d4np-concurrent`) — **the interface only**; the Redisson implementation ships
+  separately so nobody takes a Redis client to get the concurrency utilities. Lease time is
+  mandatory, which stops a crashed holder keeping a lock forever — and *creates* the case that
+  corrupts data, because **a lease can expire while the holder is still running** and then two
+  processes both write. No lease-based lock prevents that, so the interface carries
+  `fencingToken()`: a value that strictly increases per key, which the protected resource uses to
+  reject a stale writer. **An implementation that cannot keep it monotonic across its own restart
+  must return empty**, because a restarted counter is *worse* than an absent one — it looks like a
+  guarantee ([ADR-0037](docs/adr/0037-a-fencing-token-that-restarts-is-worse-than-none.md)).
+  `close()` releases **this acquisition and never the key**, so a holder whose lease expired cannot
+  delete the next holder's lock; it is idempotent and never throws. A non-reentrant implementation
+  must **refuse** a nested acquisition rather than block on a lock the caller already owns.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

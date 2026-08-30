@@ -275,6 +275,28 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 - **Every failure arrives through the future, including a rejected submission.** This diverges from
   `CompletableFuture.supplyAsync`, which lets a `RejectedExecutionException` escape on the submitting
   thread, forcing a caller to handle one operation in two places.
+- **`DistributedLock`, `LockHandle` and `DistributedLockException` — FR-10's lock contract, interface
+  only** (ROADMAP item 5.3, RFC-0004,
+  [ADR-0037](docs/adr/0037-a-fencing-token-that-restarts-is-worse-than-none.md),
+  [ADR-0038](docs/adr/0038-refuse-the-convenience-form-the-rfc-sanctioned.md)). `d4np-concurrent`
+  publishes the interface and no implementation, so a consumer never takes a backend client to get it.
+  `tryAcquire(key, lease, wait)` returns `Optional<LockHandle>`: failing to acquire is an outcome, not
+  an error.
+- **Lease time is mandatory** — there is no overload that omits it — so a crashed or paused holder
+  cannot starve everyone else; the backend releases the lock rather than the holder.
+- **`LockHandle.fencingToken()` returns `OptionalLong`, and empty is a required answer** for any
+  implementation that cannot keep the sequence strictly increasing across its own restart. A
+  restarted counter is more dangerous than an absent one: it looks like a guarantee, and a resource
+  trusting it accepts a stale writer. The mitigation is the protected resource's to apply, which the
+  Javadoc states rather than implies.
+- **`close()` releases the acquisition and never the key**, so a holder whose lease expired cannot
+  delete the lock a later holder now owns. It is idempotent, never throws, and narrows
+  `AutoCloseable`'s `throws Exception` away.
+- **A non-reentrant implementation must refuse a nested acquisition rather than block on it**, so the
+  failing case is a prompt empty result instead of a wait that ends at the lease with nothing logged.
+- **`DistributedLockException` carries the lock key in `key()` and never in `getMessage()`**, which
+  names only the operation and the failure's type. The key is bounded and stripped of control
+  characters inside the type, because every thrower lives in another module.
 
 ### Changed
 
