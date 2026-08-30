@@ -1,6 +1,8 @@
 # RFC-0005: Security module contracts — envelope binding, key lifetime, JWKS trust and the dependency gate
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-30, owner authority — **no peer-review round, and for this document
+  that is the material fact**; approval followed the merge, as RFC-0004's did; see
+  [Approval](#approval))
 - **Author:** tech-lead · **Reviewers:** security-auditor (every section; this is the RFC its role
   exists for), reviewer, enterprise-architect (a new third-party surface and a change to spec §3's
   dependency graph) · **Approver:** owner (@danielPoloWork)
@@ -436,13 +438,33 @@ binding above, is also a decryption break for existing data — which is the pro
 
 ## Approval
 
-The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). This document is
-drafted `Proposed` with an **empty `approved-by:`**, to be flipped only on the owner's word, in a
-change separate from the drafting, so the two acts are visible as two acts.
+The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). The record below
+was **authorized by the owner (@danielPoloWork) in session on 2026-08-30** and transcribed by the
+agent. The agent drafted this RFC and did not judge its soundness; the decision is the owner's.
 
 ```
-approved-by:
+approved-by: owner @danielPoloWork (2026-08-30)
 ```
+
+**This document was drafted `Proposed` with an empty `approved-by:` and flipped only on the owner's
+word**, in a change separate from the drafting, so the two acts are visible as two acts in the
+history.
+
+**The sequence matches RFC-0004's rather than RFC-0001–0003's, and that is now the second instance
+rather than an exception.** Those three were approved *before* their pull request, which is what let
+RFC-0003 say that *"merging publishes an already-accepted document rather than performing the
+acceptance."* Here, as with RFC-0004, the document merged as PR #54 while still `Proposed` and the
+approval followed. **For this RFC the window matters more than it did for RFC-0004**, because the
+document is entirely security decisions: for the interval between those two events, `main` carried an
+unapproved set of cryptographic and trust-posture contracts. Nothing was implemented against them —
+item 6.1 is the first consumer and is blocked on this flip — but the window is recorded rather than
+elided.
+
+**One mechanical consequence, and it is evidence rather than noise:** `rfc_check.py` failed against
+this file before the flip *and* after it, with **different messages** — `no approval record` before,
+`approved-by 'owner' but the rfc-approved gate requires 'tech-lead'` after. The second is the failure
+RFC-0003 and RFC-0004 produce today. The verdict does not change; which sentence it prints does, and
+that is how a reader can tell the record was written.
 
 **On the approver role:** this project's RFCs are approved by the **owner**, not the `tech-lead` that
 `.eados-core`'s protocol names — satisfying that gate literally would be self-approval, since
