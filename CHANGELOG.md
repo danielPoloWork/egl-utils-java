@@ -255,6 +255,26 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   scheduling behaviour, because that claim cannot be made honestly.
 - `ThreadPoolSpec.Builder` extends core's `FluentBuilder`, so a spec missing several mandatory
   fields reports all of them in one `BuilderValidationException` instead of one per build attempt.
+- **`AsyncExecutor`, `ContextPropagator` and `ContextSnapshot` — FR-09's async wrapper and the
+  context SPI that replaces MDC** (ROADMAP item 5.2, NFR-02, RFC-0004,
+  [ADR-0036](docs/adr/0036-carry-context-through-an-spi-that-restores.md)). `AsyncExecutor.over(exec)`
+  wraps any `Executor` and returns `CompletableFuture`s; `withContext(propagator)` returns a **new**
+  instance, so a shared executor cannot change behaviour underneath its users.
+- **Context propagation is an SPI, not a dependency.** FR-09 names SLF4J's `MDC`, which
+  `d4np-concurrent` may not import at any scope, so the module publishes `ContextPropagator` /
+  `ContextSnapshot` / `ContextSnapshot.Scope` and ships no implementation that reads a logging
+  framework. Binding it to MDC is four lines in the host, given verbatim in the Javadoc. The default
+  carries nothing **explicitly** rather than reaching for `org.slf4j.MDC` reflectively.
+- **`Scope.close()` restores the previous context and never clears it**, so a pooled worker thread
+  carries nothing of one task into the next — the information-disclosure case where a second
+  request's log lines would otherwise show the first request's tenant or user. The restore also runs
+  when the task body throws.
+- **Two method names, `supply` and `run`, deliberately not one overloaded `submit`.** A
+  `Supplier`/`Runnable` overload pair is not ambiguous — it silently binds to `Runnable` and returns
+  `CompletableFuture<Void>` when a body gains braces, discarding the result.
+- **Every failure arrives through the future, including a rejected submission.** This diverges from
+  `CompletableFuture.supplyAsync`, which lets a `RejectedExecutionException` escape on the submitting
+  thread, forcing a caller to handle one operation in two places.
 
 ### Changed
 

@@ -26,6 +26,20 @@
  *       by a named jcstress harness rather than asserted in prose (spec §6).
  * </ul>
  *
+ * <h2>What a consumer still owns</h2>
+ *
+ * <p>The threads' lifetime is the caller's: {@link
+ * it.d4np.utils.concurrent.CustomThreadPoolFactory} hands back a pool the caller must close, and
+ * {@link it.d4np.utils.concurrent.AsyncExecutor} never creates a thread at all — it runs work on an
+ * {@link java.util.concurrent.Executor} it was given.
+ *
+ * <p><strong>So is the meaning of "context".</strong> FR-09 names MDC, which is SLF4J's and
+ * unreachable from a module with no third-party dependency at any scope, so this package publishes
+ * the {@link it.d4np.utils.concurrent.ContextPropagator} SPI and ships no implementation that reads
+ * a logging framework. Binding it to MDC is four lines in the host, given verbatim in that type's
+ * Javadoc. The default carries nothing and says so, rather than reaching for {@code org.slf4j.MDC}
+ * reflectively and propagating only when it happens to be present (ADR-0036).
+ *
  * <h2>The lifecycle rule that is not visible in the source</h2>
  *
  * <p>{@code ExecutorService} became {@link java.lang.AutoCloseable} in <strong>Java 19</strong>,

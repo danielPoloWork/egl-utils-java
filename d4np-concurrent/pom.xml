@@ -32,6 +32,18 @@
          benchmark belongs to item 5.2, and RFC-0004 routes the GATE for it to item 8.3 rather than
          8.8, because 5 us is an ABSOLUTE bound where NFR-03's ratio was relative. -->
     <jcstress.skip>false</jcstress.skip>
+
+    <!-- ITEM 5.2 / NFR-02. This module owns src/bench/java from here on, so it must opt in: the
+         parent defaults `jmh.skip` to true and `-Pjmh` would otherwise COMPILE the benchmark and
+         never run it — a harness that produces no number while the job reports success.
+         `consistency_lint.py`'s harness-opt-in check asserts the pairing in both directions.
+
+         The GATE for this budget is item 8.3's, not item 8.8's, and the distinction is RFC-0004's:
+         NFR-03 is a RELATIVE ratio between two arms in one JMH invocation, so a slow runner slows
+         both and the ratio holds; NFR-02 is phrased relatively but bounded ABSOLUTELY at 5 us, so a
+         loaded runner moves the difference itself. Until 8.3 lands, the numbers are tracked on the
+         reference machine and advisory in CI. -->
+    <jmh.skip>false</jmh.skip>
   </properties>
 
   <dependencies>

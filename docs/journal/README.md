@@ -19,6 +19,12 @@ _(newest first)_
 
 #### August
 
+- [2026-08-30 — FR-09's async wrapper, and a leak test that passed against the leak (item 5.2)](2026/08/2026-08-30-async-executor.md) —
+  FR-09 names SLF4J's MDC, which this module may not import, so it publishes a **context SPI** whose
+  `Scope` restores rather than clears (ADR-0036). **The leak test RFC-0004 and the threat model both
+  describe passes against the defect it names** — the next task installs its own capture over the
+  residue and hides it — so both demonstrations observe by submitting straight to the pool. NFR-02's
+  first harness measured a thread handoff on every arm; the budget is met inline by ~5000×.
 - [2026-08-30 — FR-08's pools, and an RFC conclusion corrected by its own second requirement (item 5.1)](2026/08/2026-08-30-custom-thread-pool-factory.md) —
   `d4np-concurrent`'s first public API, and the first module here to publish one while adding **no
   `requires` edge at all**. ADR-0035 corrects RFC-0004 from the direction that makes the code better
