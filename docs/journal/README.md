@@ -19,6 +19,13 @@ _(newest first)_
 
 #### August
 
+- [2026-08-30 — FR-08's pools, and an RFC conclusion corrected by its own second requirement (item 5.1)](2026/08/2026-08-30-custom-thread-pool-factory.md) —
+  `d4np-concurrent`'s first public API, and the first module here to publish one while adding **no
+  `requires` edge at all**. ADR-0035 corrects RFC-0004 from the direction that makes the code better
+  than the document predicted — declaring `AutoCloseable` makes the `@Override` legal *and* makes
+  deleting `close()` a compile error — with the expiry date of that guard recorded. FR-08's mandated
+  rejection handler turns out to be unreachable over the JDK's default queue, so the bound became
+  mandatory; and NFR-05's harness was **made to fail on purpose** before its green run was believed.
 - [2026-08-30 — RFC-0004, and a requirement that names a type the module may not import (item 5.0)](2026/08/2026-08-30-rfc-0004-concurrency-contracts.md) —
   Milestone 5 opens; FR-08/FR-09/FR-10 pinned with **every surface claim compiled before it was
   written**, which is item 4.4's lesson turned into procedure. FR-09's *"MDC context propagation"*

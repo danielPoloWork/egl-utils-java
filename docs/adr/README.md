@@ -38,15 +38,15 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **38 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **39 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows. (This count read **24**
 until item 4.0, having missed ADR-0021 and ADR-0022: both added their rows below without incrementing
 the total, because the `adr-index` check verifies the bijection and every status but **not** this
 number. Corrected there rather than left for a reader to recount, and noted so the drift is visible
 instead of silently absorbed. Item 4.1 took it from 27 to **29**, item 4.2 to **31**, item 4.3 to
-**33**, item 4.4 to **36** and item 4.5 to **38** — the count is maintained by hand on every pass,
-which is the standing reason it drifts.)
+**33**, item 4.4 to **36**, item 4.5 to **38** and item 5.1 to **39** — the count is maintained by
+hand on every pass, which is the standing reason it drifts.)
 
 ## Index — decisions taken under this docs system
 
@@ -86,6 +86,7 @@ which is the standing reason it drifts.)
 | [0032](0032-name-the-void-transaction-form-differently.md) | Name the void transaction form differently, because the overload pair does not compile | Accepted |
 | [0033](0033-publish-no-accessor-for-the-unvalidated-sort.md) | Publish no accessor for the unvalidated sort, so the allowlist cannot be skipped | Accepted |
 | [0034](0034-mint-a-validation-failure-from-outside-core.md) | Mint a validation failure from outside core, and bound what it is allowed to say | Accepted |
+| [0035](0035-declare-autocloseable-so-the-override-is-legal.md) | Declare `AutoCloseable` explicitly, because it is the guard rather than the method | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

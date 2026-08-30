@@ -19,6 +19,21 @@
   <name>Concurrent</name>
   <description>Pooling and async execution. No third-party dependencies; DistributedLock is an interface here, never an implementation.</description>
 
+  <properties>
+    <!-- ITEM 5.1 / NFR-05. This is the first NFR in the project that mandates a jcstress harness BY
+         NAME — "CustomThreadPoolFactory pools show 0 jcstress anomalies for rejection/shutdown
+         races" — so the opt-in is a requirement rather than the judgement call it was for items
+         3.1, 4.1 and 4.3, each of which recorded why a stateless type owes none. The parent
+         defaults `jcstress.skip` to true and `consistency_lint.py`'s harness-opt-in check asserts
+         this pairing in both directions, so this property and the harness under src/jcstress/java
+         have to land together.
+
+         No `jmh.skip` here: this module owns no src/bench/java yet. NFR-02's submission-overhead
+         benchmark belongs to item 5.2, and RFC-0004 routes the GATE for it to item 8.3 rather than
+         8.8, because 5 us is an ABSOLUTE bound where NFR-03's ratio was relative. -->
+    <jcstress.skip>false</jcstress.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>it.d4np</groupId>
