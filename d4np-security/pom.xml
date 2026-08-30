@@ -19,7 +19,22 @@
   <name>Security</name>
   <description>JWT and cryptography under the ADR-003 hardened profiles. Owns its Nimbus JOSE+JWT surface.</description>
 
+  <properties>
+    <!-- ITEM 6.1 / ADR-003. Nimbus at COMPILE scope, pinned to the LATEST stable, and the reasoning
+         is item 4.1's rather than item 3.1's. The two are opposite, and the difference is scope.
+         jakarta.validation is `provided` in d4np-core, so the HOST's copy wins and pinning to the
+         matrix FLOOR is what keeps the floor honest. Nimbus is `compile`, so OURS is what a host
+         with no dependency management resolves; an old pin would ship a stale JOSE implementation
+         to exactly the hosts least equipped to notice. -->
+    <nimbus.version>10.3</nimbus.version>
+  </properties>
+
   <dependencies>
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
+      <version>${nimbus.version}</version>
+    </dependency>
     <dependency>
       <groupId>it.d4np</groupId>
       <artifactId>d4np-core</artifactId>
@@ -36,6 +51,29 @@
        say so by name and extending this list is a deliberate, reviewed act — which is the intent. -->
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- ITEM 6.1. NOT a workaround for our code: a defect in Nimbus's shaded Gson, measured.
+               Gson's SqlTypesSupport decides whether to register java.sql.Date adapters by calling
+               Class.forName and catching ClassNotFoundException. On the CLASS path that guard is
+               correct. On the MODULE path, when java.sql is resolved but com.nimbusds.jose.jwt does
+               not read it, the JVM raises IllegalAccessError instead, which is an Error and is not
+               caught, so JSONObjectUtils never initialises and every JSON operation dies.
+
+               Nimbus 10.3's descriptor requires neither java.sql nor static java.sql, so nothing a
+               consuming module declares can grant the edge. Measured across versions without this
+               flag: 9.37.3 fails, 10.0 fails, 10.0.2 PASSES, 10.1 fails, 10.2 fails, 10.3 fails.
+               10.0.2 is an island rather than a trend, so pinning to it would be depending on an
+               accident in a security library.
+
+               So the flag is the module's own build, JwsEngine detects the condition at
+               CONSTRUCTION and names this exact flag, and the obligation is documented for modular
+               consumers. See ADR-0039. -->
+          <argLine>--add-reads com.nimbusds.jose.jwt=java.sql</argLine>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>

@@ -19,6 +19,13 @@ _(newest first)_
 
 #### August
 
+- [2026-08-30 — FR-11's provider, and a dependency claim that is true in Maven only (item 6.1)](2026/08/2026-08-30-jwt-token-provider.md) —
+  `d4np-security`'s first public API, 60 tests, ADR-0039. **ADR-003 chose Nimbus for a "minimal transitive
+  footprint", and that is true in Maven and incomplete under JPMS:** its shaded Gson guards for
+  `ClassNotFoundException` and JPMS raises `IllegalAccessError`, so every JSON operation dies. Six versions
+  measured; 10.0.2 is an island, so the version stays latest and the failure moves to construction. Two of
+  my own claims were corrected by measurement — the JDK's redirect default, and what the RFC 7515 vector
+  can prove. Strategy is catalogued as **rejected**: for `alg` selection it is the vulnerability.
 - [2026-08-30 — RFC-0005, and a mandate the roadmap did not list (item 6.0)](2026/08/2026-08-30-rfc-0005-security-contracts.md) —
   Milestone 6 opens. **The first finding was in the roadmap line above the work:** the risk register routes
   **R-06** to this RFC by name, so there are four mandates rather than three and **item 6.1 is blocked too**.
