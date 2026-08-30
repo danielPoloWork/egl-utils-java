@@ -19,6 +19,12 @@ _(newest first)_
 
 #### August
 
+- [2026-08-30 — RFC-0005, and a mandate the roadmap did not list (item 6.0)](2026/08/2026-08-30-rfc-0005-security-contracts.md) —
+  Milestone 6 opens. **The first finding was in the roadmap line above the work:** the risk register routes
+  **R-06** to this RFC by name, so there are four mandates rather than three and **item 6.1 is blocked too**.
+  The per-key GCM cap becomes an asymmetry rather than a number; the envelope header becomes mandatory AAD;
+  and a new rule decides the spec change — **supersede a contract, amend a fact**. Also corrects item 8.9's
+  provenance: the audit found that drift first, as R-07.
 - [2026-08-30 — FR-10's interface, and a token that is safer absent (item 5.3)](2026/08/2026-08-30-distributed-lock.md) —
   **Milestone 5 closes.** An interface-only item, so the deliverable beside three types is a contract test
   against a reference implementation in test scope — and the load-bearing one, *a stale holder must not

@@ -5,7 +5,7 @@
 # section derives no override and needs no provenance entry until it is settled (#201).
 
 schema_version: 1
-manifest_rev: 8              # the optimistic-concurrency counter for THIS FILE, not for the phase —
+manifest_rev: 9              # the optimistic-concurrency counter for THIS FILE, not for the phase —
                              # render.py's own words ("the optimistic-concurrency counter"), and
                              # phase_runner only *emits* the bump as part of a transition. **Any write
                              # moves it, transition or not**, including a comment-only correction: a
@@ -81,7 +81,7 @@ delivery_state:
   # rfc -> milestone is derived from ROADMAP.md by traceability.covering_milestones (which returns
   # bare numbers; doctor.py prefixes the M), so nothing parses the list below — it is the recorded
   # cross-link, read by doctor.py for the status readout.
-  refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003', 'RFC-0004'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33, 43], releases: [] }
+  refs: { rfcs: ['RFC-0001', 'RFC-0002', 'RFC-0003', 'RFC-0004', 'RFC-0005'], milestones: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8'], prs: [1, 4, 7, 33, 43], releases: [] }
   # PR #1 = the bootstrap PR; PR #4 = landed RFC-0001; PR #7 = landed ROADMAP.md (traceability edges);
   # PR #33 = landed RFC-0002; PR #43 = lands RFC-0003. Recorded while #43 is OPEN rather than after it
   # merges, which is a deliberate departure: RFC-0001's number went in with its approval commit, and
