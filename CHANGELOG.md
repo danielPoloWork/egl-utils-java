@@ -234,6 +234,27 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
   caller.
 - `PageRequest.offset()` returns `(long) page * size`, which is the one derived value a caller would
   otherwise compute with a silent `int` overflow.
+- **`CustomThreadPoolFactory`, `ThreadPoolSpec` and `ManagedThreadPool` — FR-08's pools, and the
+  first public API of `d4np-concurrent`** (ROADMAP item 5.1, NFR-05, RFC-0004,
+  [ADR-0035](docs/adr/0035-declare-autocloseable-so-the-override-is-legal.md)). The module exports
+  `it.d4np.utils.concurrent` for the first time and keeps **zero third-party dependencies at every
+  scope**, so a consumer takes `d4np-core` and this JAR and nothing else — everything used is in
+  `java.base`, so unlike `d4np-jdbc` it adds no `requires` edge at all.
+- **A bounded queue and a rejection policy are both mandatory**, with no defaulting overload.
+  `Executors.newFixedThreadPool` uses an *unbounded* queue, over which an explicit
+  `RejectedExecutionHandler` can never run — so requiring the handler without requiring the bound
+  would have been decoration. Pass `Integer.MAX_VALUE` to opt into unbounded buffering explicitly.
+- **`ManagedThreadPool` owns the shutdown budget and publishes no way to undo its configuration.**
+  `close()` stops accepting, drains for the configured `drainTimeout`, then interrupts; it never
+  throws, is idempotent, and logs an incomplete drain as a `WARNING` carrying the **count** of tasks
+  that never started rather than the tasks. No setter and no accessor returns the underlying
+  executor or its queue.
+- **Threads are named `<pool>-<n>`, non-daemon by default, and always carry an
+  uncaught-exception handler** — the default logs the failure's type through `System.Logger` and
+  never its message. Thread priority is accepted and documented as advisory; no test asserts
+  scheduling behaviour, because that claim cannot be made honestly.
+- `ThreadPoolSpec.Builder` extends core's `FluentBuilder`, so a spec missing several mandatory
+  fields reports all of them in one `BuilderValidationException` instead of one per build attempt.
 
 ### Changed
 

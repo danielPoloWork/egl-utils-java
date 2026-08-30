@@ -127,6 +127,20 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   them, counts in `long` throughout, and renders the page's *shape* in `toString()` and never its
   rows ([ADR-0033](docs/adr/0033-publish-no-accessor-for-the-unvalidated-sort.md),
   [ADR-0034](docs/adr/0034-mint-a-validation-failure-from-outside-core.md)).
+- **Pools whose configuration cannot be undone:** `CustomThreadPoolFactory` / `ThreadPoolSpec` /
+  `ManagedThreadPool` (FR-08, NFR-05, `d4np-concurrent`) — the module's first public API, with **zero
+  third-party dependencies at any scope**. A **bounded queue and a rejection policy are both
+  mandatory**, because `Executors.newFixedThreadPool` uses an unbounded queue over which an explicit
+  `RejectedExecutionHandler` can never run; requiring the handler without the bound would configure
+  a control that cannot fire. The pool is returned as `ManagedThreadPool` rather than
+  `ThreadPoolExecutor`, so `setCorePoolSize`, `setRejectedExecutionHandler` and `getQueue` are simply
+  absent, and it carries its own drain budget: `close()` stops accepting, drains for
+  `drainTimeout`, then interrupts — never throwing, and logging an incomplete drain as the *count* of
+  tasks that never started rather than the tasks. Threads are named `<pool>-<n>`, non-daemon by
+  default so a forgotten `close()` hangs visibly instead of losing work silently, and always carry an
+  uncaught-exception handler. NFR-05's named jcstress harness races a submit against a close and was
+  **shown to go red under a deliberate defect before its green run was trusted**
+  ([ADR-0035](docs/adr/0035-declare-autocloseable-so-the-override-is-legal.md)).
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.
