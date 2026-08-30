@@ -38,14 +38,14 @@ their ids and their files, and this page becomes the one complete index.
 the moment it lands — reserving a number range in advance was tried four times and missed four times
 (ADR-0004, ADR-0005, ADR-0006, ADR-0007 each took a number some earlier note had promised item 1.10).
 
-Both indexes below are complete: **42 decisions, no third home.** `consistency_lint.py`'s `adr-index`
+Both indexes below are complete: **43 decisions, no third home.** `consistency_lint.py`'s `adr-index`
 check asserts the bijection and the status of every row in both, so a record cannot drift out of this
 page — including if a re-render of the generated docs ever drops the rows. (This count read **24**
 until item 4.0, having missed ADR-0021 and ADR-0022: both added their rows below without incrementing
 the total, because the `adr-index` check verifies the bijection and every status but **not** this
 number. Corrected there rather than left for a reader to recount, and noted so the drift is visible
 instead of silently absorbed. Item 4.1 took it from 27 to **29**, item 4.2 to **31**, item 4.3 to
-**33**, item 4.4 to **36**, item 4.5 to **38**, item 5.1 to **39**, item 5.2 to **40** and item 5.3 to **42** — the count is maintained by
+**33**, item 4.4 to **36**, item 4.5 to **38**, item 5.1 to **39**, item 5.2 to **40**, item 5.3 to **42** and item 6.1 to **43** — the count is maintained by
 hand on every pass, which is the standing reason it drifts.)
 
 ## Index — decisions taken under this docs system
@@ -90,6 +90,7 @@ hand on every pass, which is the standing reason it drifts.)
 | [0036](0036-carry-context-through-an-spi-that-restores.md) | Carry context through an SPI whose scope restores, never clears | Accepted |
 | [0037](0037-a-fencing-token-that-restarts-is-worse-than-none.md) | A fencing token that restarts is worse than none, so empty is a required answer | Accepted |
 | [0038](0038-refuse-the-convenience-form-the-rfc-sanctioned.md) | Refuse the convenience form RFC-0004 sanctioned, because its return type cannot say what happened | Accepted |
+| [0039](0039-detect-nimbus-shaded-gson-jpms-failure-at-construction.md) | Keep Nimbus at the latest, and turn its JPMS failure into a startup error | Accepted |
 
 ## Index — imported decisions (pre-governance, 2026-07-14)
 

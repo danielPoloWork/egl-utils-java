@@ -16,4 +16,8 @@
  */
 module it.d4np.utils.security {
   requires it.d4np.utils;
+  requires com.nimbusds.jose.jwt;
+  requires java.net.http;
+
+  exports it.d4np.utils.security;
 }

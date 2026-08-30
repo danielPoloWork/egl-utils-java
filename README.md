@@ -169,6 +169,22 @@ mvn -B -Pjcstress verify   # jcstress stress tests under <module>/src/jcstress/j
   `close()` releases **this acquisition and never the key**, so a holder whose lease expired cannot
   delete the next holder's lock; it is idempotent and never throws. A non-reentrant implementation
   must **refuse** a nested acquisition rather than block on a lock the caller already owns.
+- **JWT verification where the algorithm is never taken from the token:** `JwtTokenProvider` /
+  `JwtVerifier` (FR-11, `d4np-security`) on Nimbus under the ADR-003 hardened profile. **One
+  verifier, one algorithm**, fixed at construction — the token's `alg` header is *compared* against
+  it, never consulted to select a verifier, and the comparison happens before any key is resolved.
+  That makes `alg=none` and algorithm confusion structurally impossible rather than checked: the
+  suite forges the real attack (an HS256 token signed with the issuer's RSA **public** key) and
+  shows the same token verifying against a naive verifier, so the rejection is evidence. **Verifying
+  and signing are different types** — a service consuming an identity provider's tokens gets a
+  `JwtVerifier` with no `sign` method to reach. `exp` is mandatory and a token this library signs
+  cannot lack one; `iss` and `aud` are constructor arguments rather than defaults; an HS256 secret
+  under 256 bits is refused at construction. `JwksSource` fixes the key endpoint at construction from
+  an **origin allowlist**, never consults `jku`/`x5u`, refuses non-HTTPS, refuses a redirect rather
+  than following it, and bounds the fetch
+  ([ADR-0039](docs/adr/0039-detect-nimbus-shaded-gson-jpms-failure-at-construction.md)).
+  **Modular consumers note:** Nimbus's shaded Gson needs a `--add-reads` flag under JPMS; the
+  provider detects the condition at construction and names it.
 
 See [`docs/development/local-build.md`](docs/development/local-build.md) for the full local
 setup.

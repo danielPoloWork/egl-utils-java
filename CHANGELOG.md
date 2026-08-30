@@ -297,6 +297,29 @@ PR. A release PR moves the `[Unreleased]` entries into a new per-version file un
 - **`DistributedLockException` carries the lock key in `key()` and never in `getMessage()`**, which
   names only the operation and the failure's type. The key is bounded and stripped of control
   characters inside the type, because every thrower lives in another module.
+- **`JwtTokenProvider`, `JwtVerifier`, `JwtProfile`, `JwtClaims`, `JwksSource` and
+  `JwtVerificationException` — FR-11's JWT support, and the first public API of `d4np-security`**
+  (ROADMAP item 6.1, ADR-003, RFC-0005,
+  [ADR-0039](docs/adr/0039-detect-nimbus-shaded-gson-jpms-failure-at-construction.md)). One compile
+  dependency, `nimbus-jose-jwt`, and no Nimbus type in any published signature.
+- **One verifier accepts one algorithm**, fixed at construction. The token's `alg` is compared
+  against it and never used to select a verifier, so `alg=none` and algorithm confusion are refused
+  before key material is resolved.
+- **Verifying and signing are separate types.** `JwtVerifier` verifies; `JwtTokenProvider` extends it
+  and signs. A service that only consumes tokens has no `sign` method available to it.
+- **`exp` is mandatory in both directions** — a token without one is rejected, and a token this
+  library signs cannot lack one, because the provider sets `iss`, `aud`, `iat` and `exp` itself and
+  `JwtClaims.with` refuses those names. Clock skew defaults to 60 s and is capped at five minutes.
+- **HS256 secrets under 256 bits are rejected at construction**, with the measured bit count in the
+  message.
+- **`JwksSource` pins the JWKS trust posture**: the URL is fixed at construction from an origin
+  allowlist, `jku`/`x5u` are never consulted, non-HTTPS is refused rather than upgraded, a redirect
+  is refused rather than followed, and the fetch is bounded in time and size with a cached,
+  rate-limited refresh.
+- **Modular consumers must add `--add-reads com.nimbusds.jose.jwt=java.sql`.** Nimbus's shaded Gson
+  reads `java.sql.Date` without declaring the edge, and its `ClassNotFoundException` guard does not
+  catch the `IllegalAccessError` JPMS raises instead. The provider detects this at construction and
+  names the flag rather than failing at the first token. Class-path consumers are unaffected.
 
 ### Changed
 
