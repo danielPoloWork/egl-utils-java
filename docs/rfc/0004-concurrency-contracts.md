@@ -1,6 +1,7 @@
 # RFC-0004: Concurrency contracts — pool lifecycle, context propagation and the distributed lock
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-08-30, owner authority — no peer-review round; **approval followed the
+  merge**, unlike RFC-0001–0003; see [Approval](#approval))
 - **Author:** tech-lead · **Reviewers:** reviewer, enterprise-architect (a third module surface and
   the interface every future lock implementation inherits), security-auditor (FR-09's cross-task
   context leak and the C-01 rules on lock keys) · **Approver:** owner (@danielPoloWork)
@@ -581,13 +582,33 @@ RFC.
 
 ## Approval
 
-The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). This document is
-drafted `Proposed` with an **empty `approved-by:`**, and will be flipped only on the owner's word, in
-a change separate from the drafting, so that the two acts are visible as two acts in the history.
+The approval encodes a **human decision** — no RFC self-approves (`AGENTS.md` §6). The record below
+was **authorized by the owner (@danielPoloWork) in session on 2026-08-30** and transcribed by the
+agent. The agent drafted this RFC and did not judge its soundness; the decision is the owner's.
 
 ```
-approved-by:
+approved-by: owner @danielPoloWork (2026-08-30)
 ```
+
+**This document was drafted `Proposed` with an empty `approved-by:` and flipped only on the owner's
+word**, in a change separate from the drafting, so the two acts are visible as two acts in the
+history.
+
+**The sequence differs from RFC-0001, RFC-0002 and RFC-0003, and the difference is recorded rather
+than smoothed over.** Each of those was approved **before** its pull request, so RFC-0003 could say
+that *"merging publishes an already-accepted document rather than performing the acceptance."* That
+sentence is not available here. This RFC was drafted, opened as PR #49 and **merged while still
+`Proposed`**; the owner approved it afterwards, in session, and this change is the flip. So for the
+window between those two events, `main` carried an unapproved RFC — which is visible in the history
+rather than hidden by it, and is exactly why the status field is a field rather than an assumption.
+Nothing was implemented against the RFC in that window: item 5.1 is the first item to consume it and
+had not started.
+
+**One mechanical consequence worth naming, because it is evidence rather than noise:** `rfc_check.py`
+failed against this file before the flip *and* after it, with **different messages** — `no approval
+record` before, `approved-by 'owner' but the rfc-approved gate requires 'tech-lead'` after. The
+second is the same failure RFC-0003 produces today. The gate's verdict does not change; what changes
+is which sentence it prints, and that is how a reader can tell the record was written.
 
 **On the approver role:** this project's RFCs are approved by the **owner**, not by the `tech-lead`
 that `.eados-core`'s RFC protocol names — satisfying that gate literally would be self-approval,
