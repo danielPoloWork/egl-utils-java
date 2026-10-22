@@ -68,7 +68,7 @@
     <compiler.plugin.version>3.15.0</compiler.plugin.version>
 
     <!-- Item 1.4 — quality toolchain. Latest STABLE, pre-releases filtered out. -->
-    <spotless.plugin.version>2.44.5</spotless.plugin.version>
+    <spotless.plugin.version>3.9.0</spotless.plugin.version>
     <google.java.format.version>1.27.0</google.java.format.version>
     <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
     <checkstyle.version>10.26.1</checkstyle.version>
